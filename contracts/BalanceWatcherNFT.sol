@@ -59,11 +59,13 @@ contract BalanceWatcherNFT is ERC721 {
     function tokenURI(uint256 tokenId) override public view returns (string memory) {
         // TODO: Offload to external rendering contract
         string memory output = '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 300 300"><defs><linearGradient id="bg-gradient" gradientTransform="rotate(45, 0.5, 0.5)"><stop class="stop1" offset="0%"/><stop class="stop2" offset="50%"/><stop class="stop3" offset="100%"/></linearGradient><style>.base { fill: black; font-family: sans-serif; font-size: 24px; vertical-align: text-top;}.item {font-size: 18px;}.sub {font-size: 12px;}.stop1 { stop-color: #EEE9B8; }.stop2 { stop-color: #C0EEB8; }.stop3 { stop-color: #B8E5E3; }</style></defs><rect width="100%" height="100%" fill="url(#bg-gradient)" />';
-        output = string(abi.encodePacked(output, '<text x="26" y="44" class="base">Wallet #', OStrings.toString(tokenId), '</text>'));
+        output = string(abi.encodePacked(output, '<text x="26" y="44" class="base sub">Wallet #', OStrings.toString(tokenId), '</text>'));
         
         address[5] memory _tokenAddresses = tokenAddresses[tokenId];
         uint256 totalValue = 0;
-        for (uint256 i = 0; i < 5; i++) {
+        uint256 otherValue = 0;
+        
+        for (uint256 i = 0; i < _tokenAddresses.length; i++) {
             address _tokenAddress = _tokenAddresses[i];
             bytes[3] memory parts;
             if (_tokenAddress == address(0)) {
@@ -76,16 +78,26 @@ contract BalanceWatcherNFT is ERC721 {
 
             totalValue += value;
 
-            parts[0] = abi.encodePacked('<text x="26" y="', OStrings.toString(80+45*i), '" class="base item">', tokenContract.symbol(), '</text>');
-            parts[1] = abi.encodePacked('<text x="145" y="', OStrings.toString(80+45*i), '" class="base item">$', OStrings.toStringCommaFormat(value), '</text>');
-            parts[2] = abi.encodePacked('<text x="26" y="', OStrings.toString(95+45*i), '" class="base sub">', OStrings.toStringCommaFormat(balance), '</text>');
+            if (i > 3) {
+                otherValue += value;
+                continue;
+            } 
+
+            parts[0] = abi.encodePacked('<text x="26" y="', OStrings.toString(100+45*i), '" class="base item">', tokenContract.symbol(), '</text>');
+            parts[1] = abi.encodePacked('<text x="145" y="', OStrings.toString(100+45*i), '" class="base item">$', OStrings.toStringCommaFormat(value), '</text>');
+            parts[2] = abi.encodePacked('<text x="26" y="', OStrings.toString(100+15+45*i), '" class="base sub">', OStrings.toStringCommaFormat(balance), '</text>');
             output = string(abi.encodePacked(output, parts[0], parts[1], parts[2]));
         }
 
-        console.log(totalValue);
+        // Other value
+        output = string(abi.encodePacked(output, '<text x="26" y="280" class="base item">Other</text>'));
+        output = string(abi.encodePacked(output, '<text x="145" y="280" class="base item">$', OStrings.toStringCommaFormat(otherValue), '</text>'));
+        
+        // Total value
+        output = string(abi.encodePacked(output, '<text x="26" y="65" class="base">$', OStrings.toStringCommaFormat(totalValue), '</text>'));
 
         output = string(abi.encodePacked(output, '</svg>'));
-        string memory json = Base64.encode(bytes(string(abi.encodePacked('{"name": "Balance Watcher #', OStrings.toString(tokenId), '", "description": "This NFT displays the KLIMA balance of the owner address", "image": "data:image/svg+xml;base64,', Base64.encode(bytes(output)), '"}'))));
+        string memory json = Base64.encode(bytes(string(abi.encodePacked('{"name": "Balance Watcher #', OStrings.toString(tokenId), '", "description": "This NFT displays its owners balances of tracked tokens.", "image": "data:image/svg+xml;base64,', Base64.encode(bytes(output)), '"}'))));
         output = string(abi.encodePacked('data:application/json;base64,', json));
 
         return output;
