@@ -54,13 +54,13 @@ describe("BalanceNFT Tests", function () {
     await token3.mint(account1.address, ethers.utils.parseUnits("10000", decimals))
 
     token4 = await ERC20.deploy('Token 4', 'TOKEN4')
-    await token4.mint(account1.address, ethers.utils.parseUnits("10000", decimals))
+    await token4.mint(account1.address, ethers.utils.parseUnits("0.100", decimals))
 
     token5 = await ERC20.deploy('Token 5', 'TOKEN5')
-    await token5.mint(account1.address, ethers.utils.parseUnits("10000", decimals))
+    await token5.mint(account1.address, ethers.utils.parseUnits("0.1", decimals))
 
     baseToken = await ERC20.deploy('Base Token', 'BASE')
-    await baseToken.mint(account1.address, ethers.utils.parseUnits("20000", decimals))
+    await baseToken.mint(account1.address, ethers.utils.parseUnits("200", decimals))
 
     WETH = await ERC20.deploy('Wrapped Ether', 'WETH')
 
@@ -122,8 +122,8 @@ describe("BalanceNFT Tests", function () {
     
     const tokenId = 1
 
-    await Promise.all([token1, token2, token3, token4, baseToken].map(async (token, i) => {
-      await balanceWatcherNFT.connect(account1).trackToken(tokenId, token.address, i)
+    await Promise.all([token3, token4, token5, baseToken].map(async (token) => {
+      await balanceWatcherNFT.connect(account1).trackToken(tokenId, token.address)
     }))
     
     const tokenURI = await balanceWatcherNFT.tokenURI(tokenId)
@@ -131,8 +131,10 @@ describe("BalanceNFT Tests", function () {
     const decodedSvg = atob(JSON.parse(tokenURIDecoded).image.split(",")[1])
 
     console.log(decodedSvg)
-    const tokenSymbol = await token1.symbol()
-    const tokenDecimals = await token1.decimals()
+
+    // TODO: Test fractions
+    const tokenSymbol = await token4.symbol()
+    const tokenDecimals = await token4.decimals()
     // const balance = ethers.utils.formatUnits(await token1.balanceOf(account1.address), tokenDecimals)
 
     expect(decodedSvg).to.contain(tokenSymbol)
