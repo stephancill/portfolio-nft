@@ -9,7 +9,7 @@ function App() {
   var topSqr = <rect x={sqr1.x} y={sqr1.y} width={sqr1.width} height={sqr1.height} transform={sqr1.rotate} fill="url(#paint0)"/>
   var botSqr = <rect x={sqr2.x} y={sqr2.y} width={sqr2.width} height={sqr2.height} transform={sqr2.rotate} fill="url(#paint1)"/>
   var topCir = <circle cx={cir1.x} cy={cir1.y} r={cir1.radius} transform={cir1.rotate} fill="url(#paint0)"/>
-  var botCir = <circle cx={cir1.x} cy={cir1.y} r={cir1.radius} transform={cir1.rotate} fill="url(#paint0)"/>
+  var botCir = <circle cx={cir2.x} cy={cir2.y} r={cir2.radius} transform={cir2.rotate} fill="url(#paint1)"/>
 
   var obj1 
   var obj2
