@@ -28,6 +28,9 @@ describe("BalanceNFT Tests", function () {
   let account4
   let token1
   let token2
+  let token3
+  let token4
+  let token5
   let WETH
   let balanceWatcherNFT
   let priceFetcher
@@ -44,9 +47,17 @@ describe("BalanceNFT Tests", function () {
     const decimals = await token1.decimals()
     await token1.mint(account1.address, ethers.utils.parseUnits("1000", decimals))
 
-    // TODO: Test eth balance
     token2 = await ERC20.deploy('Token 2', 'TOKEN2')
     await token2.mint(account1.address, ethers.utils.parseUnits("10000", decimals))
+
+    token3 = await ERC20.deploy('Token 3', 'TOKEN3')
+    await token3.mint(account1.address, ethers.utils.parseUnits("10000", decimals))
+
+    token4 = await ERC20.deploy('Token 4', 'TOKEN4')
+    await token4.mint(account1.address, ethers.utils.parseUnits("10000", decimals))
+
+    token5 = await ERC20.deploy('Token 5', 'TOKEN5')
+    await token5.mint(account1.address, ethers.utils.parseUnits("10000", decimals))
 
     baseToken = await ERC20.deploy('Base Token', 'BASE')
     await baseToken.mint(account1.address, ethers.utils.parseUnits("20000", decimals))
@@ -57,10 +68,10 @@ describe("BalanceNFT Tests", function () {
     const {factory: _pairFactory, router} = await deployUniswap({deployer, WETH})
     pairFactory = _pairFactory
 
-    await Promise.all([token1, token2].map(async (token) => {
+    await Promise.all([token1, token2, token3, token4, token5].map(async (token, i) => {
       await pairFactory.createPair(token.address, baseToken.address)
       const tokenLPAmount = ethers.utils.parseUnits("100000", decimals)
-      const baseLPAmount = ethers.utils.parseUnits("2000000", decimals)
+      const baseLPAmount = ethers.utils.parseUnits("200000", decimals+i)
       
       await token.mint(account2.address, tokenLPAmount)
       await baseToken.mint(account2.address, baseLPAmount)
@@ -111,9 +122,9 @@ describe("BalanceNFT Tests", function () {
     
     const tokenId = 1
 
-    await balanceWatcherNFT.connect(account1).trackToken(tokenId, token1.address, 0)
-    await balanceWatcherNFT.connect(account1).trackToken(tokenId, token2.address, 1)
-    await balanceWatcherNFT.connect(account1).trackToken(tokenId, baseToken.address, 2)
+    await Promise.all([token1, token2, token3, token4, baseToken].map(async (token, i) => {
+      await balanceWatcherNFT.connect(account1).trackToken(tokenId, token.address, i)
+    }))
     
     const tokenURI = await balanceWatcherNFT.tokenURI(tokenId)
     const tokenURIDecoded = atob(tokenURI.split(",")[1])
@@ -130,3 +141,4 @@ describe("BalanceNFT Tests", function () {
 });
 
 // TODO: Test PriceFetcher
+// TODO: Test OStrings.toStringCommaFormat
