@@ -31,6 +31,7 @@ contract BalanceWatcherNFT is ERC721 {
         // TODO: Synthetic version
         // TODO: Choose default wallet
         // TODO: Store wallet list on an L2 if possible - optimistic rollups use async messaging so won't be gasless nor instant
+        // TODO: Pinned tokens
         
         // TODO: onlyOwner set method or store baseTokenAddress by tokenId and let owner set
         baseTokenAddress = _baseTokenAddress;
@@ -70,6 +71,7 @@ contract BalanceWatcherNFT is ERC721 {
 
     function tokenURI(uint256 tokenId) override public view returns (string memory) {
         // TODO: Offload to external rendering contract
+        // TODO: New SVG
         string memory output = '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 300 300"><defs><linearGradient id="bg-gradient" gradientTransform="rotate(45, 0.5, 0.5)"><stop class="stop1" offset="0%"/><stop class="stop2" offset="50%"/><stop class="stop3" offset="100%"/></linearGradient><style>.base { fill: black; font-family: sans-serif; font-size: 24px; vertical-align: text-top;}.item {font-size: 18px;}.sub {font-size: 12px;}.stop1 { stop-color: #EEE9B8; }.stop2 { stop-color: #C0EEB8; }.stop3 { stop-color: #B8E5E3; }</style></defs><rect width="100%" height="100%" fill="url(#bg-gradient)" />';
         output = string(abi.encodePacked(output, '<text x="26" y="44" class="base sub">Wallet #', OStrings.toString(tokenId), '</text>'));
         
