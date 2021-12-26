@@ -43,7 +43,7 @@ function App() {
           .h2 {h2}
           .h3 {h3}
         </style>
-        <rect width="300" height="300" fill="#272727" stroke="url(#stroke)"  stroke-width="8"/>
+        <rect width="300" height="300" fill="#272727"/>
         {obj1}
         {obj2}
         <defs>
@@ -71,6 +71,8 @@ function App() {
         <text x="20" y="235" class="h2">USDC</text><text x="150" y="235" class="h2">$2,223</text>
         <text x="20" y="249" class="h3">2223.42</text>
         <text x="20" y="280" class="h2">Other</text><text x="150" y="280" class="h2">$4,200</text>
+        <rect width="300" height="300" fill="none" stroke="url(#stroke)"  stroke-width="8"/>
+
       </svg>
       </header>
     </div>

@@ -3,16 +3,19 @@
 }
 
 .App-header {
-  background-color: #272727;
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-color: #272727;
   color: white;
 }
 
-.App-link {
-  color: #61dafb;
+.container {
+  display: inline-block;
+  width: 350px;
+}
+
+.h1 {
+  font-size: 30px;
+  font-weight: normal;
 }
