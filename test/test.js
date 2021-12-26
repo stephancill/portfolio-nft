@@ -33,6 +33,7 @@ describe("BalanceNFT Tests", function () {
   let token5
   let WETH
   let balanceWatcherNFT
+  let portfolioMetadata
   let priceFetcher
   let baseToken
 
@@ -99,7 +100,14 @@ describe("BalanceNFT Tests", function () {
     priceFetcher = await PriceFetcher.deploy(pairFactory.address)
 
     const BalanceWatcherNFT = await ethers.getContractFactory('BalanceWatcherNFT')
-    balanceWatcherNFT = await BalanceWatcherNFT.deploy(baseToken.address, priceFetcher.address)
+    balanceWatcherNFT = await BalanceWatcherNFT.deploy(baseToken.address)
+
+    await balanceWatcherNFT.setPriceFetcherAddress(priceFetcher.address)
+
+    const PortfolioMetadata = await ethers.getContractFactory('PortfolioMetadata')
+    portfolioMetadata = await PortfolioMetadata.deploy(balanceWatcherNFT.address)
+
+    await balanceWatcherNFT.setPortfolioMetadataAddress(portfolioMetadata.address);
   })
 
   beforeEach(async () => {
