@@ -1,4 +1,5 @@
 const { expect } = require("chai");
+const { Contract } = require("ethers");
 const { ethers } = require("hardhat");
 const BN = ethers.BigNumber
 
@@ -108,6 +109,15 @@ describe("BalanceNFT Tests", function () {
     portfolioMetadata = await PortfolioMetadata.deploy(portfolioNFT.address)
 
     await portfolioNFT.setPortfolioMetadataAddress(portfolioMetadata.address);
+
+    // Gas estimate
+    // let totalGas = BN.from("0")
+    // const a = [priceFetcher, portfolioNFT, portfolioMetadata].map(contract => {
+    //   console.log(contract.deployTransaction.gasLimit)
+    //   totalGas.add(contract.deployTransaction.gasLimit)
+    // })
+
+    // console.log(totalGas)
   })
 
   beforeEach(async () => {
