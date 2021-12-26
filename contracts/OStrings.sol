@@ -46,7 +46,7 @@ library OStrings {
         return nstr;
     }
 
-    function toStringCommaFormat(uint256 n) 
+    function toStringCommaFormatWithDecimals(uint256 n, uint256 d) 
         internal 
         pure 
         returns (string memory nstr) 
@@ -71,11 +71,28 @@ library OStrings {
                 count := add(count, 1)
             }
 
-            if (count % 3 == 0 && n != 0) {
+            if (count % 3 == 0 && n != 0 && count != d) {
                 assembly {
-                    let char := 44
+                    let char := 44 // ,
                     mstore(add(nstr, k), char)
                     k := sub(k, 1)
+                }
+            } else 
+            if (count == d) {
+                assembly {
+                    let char := 46 // .
+                    mstore(add(nstr, k), char)
+                    k := sub(k, 1)
+                }
+                if (n == 0) {
+                    assembly {
+                        let char := add(
+                            ASCII_DIGIT_OFFSET,
+                            mod(n, 10)
+                        )
+                        mstore(add(nstr, k), char)
+                        k := sub(k, 1)
+                    }
                 }
             }
         }

@@ -60,7 +60,7 @@ describe("BalanceNFT Tests", function () {
     await token5.mint(account1.address, ethers.utils.parseUnits("0.1", decimals))
 
     baseToken = await ERC20.deploy('Base Token', 'BASE')
-    await baseToken.mint(account1.address, ethers.utils.parseUnits("200", decimals))
+    await baseToken.mint(account1.address, ethers.utils.parseUnits("2000", decimals))
 
     WETH = await ERC20.deploy('Wrapped Ether', 'WETH')
 
@@ -70,15 +70,17 @@ describe("BalanceNFT Tests", function () {
 
     await Promise.all([token1, token2, token3, token4, token5].map(async (token, i) => {
       await pairFactory.createPair(token.address, baseToken.address)
-      const tokenLPAmount = ethers.utils.parseUnits("100000", decimals)
-      const baseLPAmount = ethers.utils.parseUnits("200000", decimals+i)
+
+      const price = BN.from(200 * (i+1))
+      const tokenLPAmount = ethers.utils.parseUnits(`${1_000_000}`, decimals)
+      const baseLPAmount = ethers.utils.parseUnits(price.mul("1000000").toString(), decimals+i)
       
       await token.mint(account2.address, tokenLPAmount)
       await baseToken.mint(account2.address, baseLPAmount)
 
       // Approve router to transfer liquidity tokens
-      await token.connect(account2).approve(router.address, ethers.utils.parseUnits("1000000000000", decimals))
-      await baseToken.connect(account2).approve(router.address, ethers.utils.parseUnits("1000000000000", decimals))
+      await token.connect(account2).approve(router.address, ethers.utils.parseUnits("10000000000000000", decimals))
+      await baseToken.connect(account2).approve(router.address, ethers.utils.parseUnits("1000000000000000", decimals))
 
       // Add liquidity
       await router.connect(account2).addLiquidity(
@@ -117,12 +119,22 @@ describe("BalanceNFT Tests", function () {
     expect(await token1.balanceOf(account1.address)).to.equal(ethers.utils.parseUnits("1000"))
   });
 
-  it("Should produce the correct SVG data for balance", async function () {
+  it("Should produce the correct SVG data", async function () {
     await balanceWatcherNFT.mint(account1.address)
     
     const tokenId = 1
 
-    await Promise.all([token3, token4, token5, baseToken].map(async (token) => {
+    const trackedTokens = [token1, token2, token3, token4, token5, baseToken]
+    const tokenDetails = await Promise.all(trackedTokens.map(async (token) => {
+      const balance = await token.connect(account1).balanceOf(account1.address)
+      const symbol = await token.symbol()
+      const decimals = await token.decimals() 
+      const price = await priceFetcher.quote(baseToken.address, token.address)
+      const value = price.mul(balance)
+      return {balance, address: token.address, symbol, decimals, price, value}
+    }))
+
+    await Promise.all(trackedTokens.map(async (token) => {
       await balanceWatcherNFT.connect(account1).trackToken(tokenId, token.address)
     }))
     
@@ -132,13 +144,11 @@ describe("BalanceNFT Tests", function () {
 
     console.log(decodedSvg)
 
-    // TODO: Test fractions
-    const tokenSymbol = await token4.symbol()
-    const tokenDecimals = await token4.decimals()
-    // const balance = ethers.utils.formatUnits(await token1.balanceOf(account1.address), tokenDecimals)
-
-    expect(decodedSvg).to.contain(tokenSymbol)
-    // expect(decodedSvg).to.contain(balance)
+    tokenDetails.sort((a, b) => b.value.sub(a.value)).splice(0, 4).map(({balance, symbol, decimals, value}) => {
+      expect(decodedSvg).to.contain(symbol)
+      expect(decodedSvg).to.contain(ethers.utils.commify(ethers.utils.formatUnits(balance, decimals)))
+      expect(decodedSvg).to.contain(`$${ethers.utils.commify(ethers.utils.formatUnits(value, decimals)).replace(".0", "")}`) // TODO: Round bignumber instead of this
+    })
   })
 });
 

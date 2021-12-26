@@ -23,12 +23,15 @@ contract BalanceWatcherNFT is ERC721 {
 
     IPriceFetcher priceFetcher;
 
+    uint256 constant DECIMALS = 3;
+
     constructor(address _baseTokenAddress, address _priceFetcherAddress) ERC721("Balance Watcher", "WATCH") {
         // TODO: Track tokens on L2s
         // TODO: Track multiple addresses
         // TODO: Synthetic version
         // TODO: Choose default wallet
         // TODO: Store wallet list on an L2 if possible - optimistic rollups use async messaging so won't be gasless nor instant
+        // TODO: Pinned tokens
         
         // TODO: onlyOwner set method or store baseTokenAddress by tokenId and let owner set
         baseTokenAddress = _baseTokenAddress;
@@ -68,6 +71,7 @@ contract BalanceWatcherNFT is ERC721 {
 
     function tokenURI(uint256 tokenId) override public view returns (string memory) {
         // TODO: Offload to external rendering contract
+        // TODO: New SVG
         string memory output = '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 300 300"><defs><linearGradient id="bg-gradient" gradientTransform="rotate(45, 0.5, 0.5)"><stop class="stop1" offset="0%"/><stop class="stop2" offset="50%"/><stop class="stop3" offset="100%"/></linearGradient><style>.base { fill: black; font-family: sans-serif; font-size: 24px; vertical-align: text-top;}.item {font-size: 18px;}.sub {font-size: 12px;}.stop1 { stop-color: #EEE9B8; }.stop2 { stop-color: #C0EEB8; }.stop3 { stop-color: #B8E5E3; }</style></defs><rect width="100%" height="100%" fill="url(#bg-gradient)" />';
         output = string(abi.encodePacked(output, '<text x="26" y="44" class="base sub">Wallet #', OStrings.toString(tokenId), '</text>'));
         
@@ -85,10 +89,8 @@ contract BalanceWatcherNFT is ERC721 {
             IERC20Metadata tokenContract = IERC20Metadata(_tokenAddress);
 
             uint256 price = priceFetcher.quote(baseTokenAddress, _tokenAddress);
-            uint256 balance = tokenContract.balanceOf(ownerOf(tokenId)) / (10 ** tokenContract.decimals());
-            uint256 value = price * balance;
-
-            console.log(i, _tokenAddress, value, balance);
+            uint256 balance = tokenContract.balanceOf(ownerOf(tokenId)) / (10 ** (tokenContract.decimals()-DECIMALS));
+            uint256 value = price * balance / (10 ** DECIMALS);
 
             valueByAddress[i] = CustomSort.AddressBalanceValue(_tokenAddress, balance, value);
 
@@ -97,7 +99,6 @@ contract BalanceWatcherNFT is ERC721 {
 
         CustomSort.sortByValue(valueByAddress, 0, int(valueByAddress.length - 1));
         CustomSort.sortByAddress(valueByAddress, 0, int(valueByAddress.length - 1));
-
 
         for (uint256 i = 0; i < tokenAddresses[tokenId].length(); i++) {
             
@@ -114,17 +115,17 @@ contract BalanceWatcherNFT is ERC721 {
             bytes[3] memory parts;
 
             parts[0] = abi.encodePacked('<text x="26" y="', OStrings.toString(100+45*i), '" class="base item">', tokenContract.symbol(), '</text>');
-            parts[1] = abi.encodePacked('<text x="145" y="', OStrings.toString(100+45*i), '" class="base item">$', OStrings.toStringCommaFormat(value), '</text>');
-            parts[2] = abi.encodePacked('<text x="26" y="', OStrings.toString(100+15+45*i), '" class="base sub">', OStrings.toStringCommaFormat(balance), '</text>');
+            parts[1] = abi.encodePacked('<text x="145" y="', OStrings.toString(100+45*i), '" class="base item">$', OStrings.toStringCommaFormatWithDecimals(value, 999), '</text>');
+            parts[2] = abi.encodePacked('<text x="26" y="', OStrings.toString(100+15+45*i), '" class="base sub">', OStrings.toStringCommaFormatWithDecimals(balance, DECIMALS), '</text>');
             output = string(abi.encodePacked(output, parts[0], parts[1], parts[2]));
         }
 
         // Other value
         output = string(abi.encodePacked(output, '<text x="26" y="280" class="base item">Other</text>'));
-        output = string(abi.encodePacked(output, '<text x="145" y="280" class="base item">$', OStrings.toStringCommaFormat(otherValue), '</text>'));
+        output = string(abi.encodePacked(output, '<text x="145" y="280" class="base item">$', OStrings.toStringCommaFormatWithDecimals(otherValue, 999), '</text>'));
         
         // Total value
-        output = string(abi.encodePacked(output, '<text x="26" y="65" class="base">$', OStrings.toStringCommaFormat(totalValue), '</text>'));
+        output = string(abi.encodePacked(output, '<text x="26" y="65" class="base">$', OStrings.toStringCommaFormatWithDecimals(totalValue, 999), '</text>'));
 
         output = string(abi.encodePacked(output, '</svg>'));
         string memory json = Base64.encode(bytes(string(abi.encodePacked('{"name": "Balance Watcher #', OStrings.toString(tokenId), '", "description": "This NFT displays its owners balances of tracked tokens.", "image": "data:image/svg+xml;base64,', Base64.encode(bytes(output)), '"}'))));
