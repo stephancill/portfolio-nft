@@ -66,8 +66,9 @@ contract PortfolioNFT is ERC721, Ownable {
         // Require that user is token owner
         require(ownerOf(_tokenId) == msg.sender, "Not owner of address");
         
-        // Require that uni price > 0
-        // TODO: Add eth tracking
+        // Require that uni price > 0 TODO: Remove checking uni price - some social tokens don't have pools on uni
+        // TODO: Add eth tracking (add amount to WETH balance to get ETH balance)
+        // TODO: Use common token list and register custom tokens
         uint256 price = priceFetcher.quote(baseTokenAddress, _tokenAddress);
         require(price > 0, string(abi.encodePacked("Price must be non-zero: ", _tokenAddress)));
         tokenAddresses[_tokenId].add(_tokenAddress);
@@ -80,7 +81,6 @@ contract PortfolioNFT is ERC721, Ownable {
     }
 
     function tokenURI(uint256 tokenId) override public view returns (string memory) {
-        // TODO: New SVG
         return IPortfolioMetadata(portfolioMetadataAddress).tokenURI(tokenId);
     } 
 

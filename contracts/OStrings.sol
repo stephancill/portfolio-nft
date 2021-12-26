@@ -135,4 +135,22 @@ library OStrings {
         require(value == 0, "Strings: hex length insufficient");
         return string(buffer);
     }
+
+    /**
+     * @dev Converts an int to 
+     */
+    function toHexColorString(uint256 value, uint256 opacity) internal pure returns (string memory) {
+        require(value <= 0xffffff, "Value greater than 0xffffff");
+        require(opacity <= 0xff, "Opacity greater than 0xff");
+        value = value << 8 | opacity;
+        bytes memory buffer = new bytes(11);
+        buffer[0] = "#";
+        for (uint256 i = 9; i > 1; --i) {
+            buffer[i] = _HEX_SYMBOLS[value & 0xf];
+            value >>= 4;
+        }
+        require(value == 0, "Strings: hex length insufficient");
+        return string(buffer);
+    }
+
 }
