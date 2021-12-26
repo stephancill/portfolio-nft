@@ -55,14 +55,10 @@ function App() {
         <stop stop-color={sqr2.col1} stop-opacity="1"/> 
         <stop offset="0.5" stop-color={sqr2.col2} />
         </linearGradient>
-        <linearGradient id="stro" gradientUnits="userSpaceOnUse">
-        <stop stop-color="#BF953F"/>
-        <stop offset="0.5" stop-color="#FCF6BA" />
-        </linearGradient>
         <linearGradient id="stroke" x1="20%" y1="60%" x2="30%" y2="0%">
-     <stop offset="50%"   stop-color="#BF953F" />
-     <stop offset="100%" stop-color="#FCF6BA" />
-   </linearGradient>
+        <stop offset="50%"   stop-color="#BF953F" />
+        <stop offset="100%" stop-color="#FCF6BA" />
+        </linearGradient>
         </defs>
         <text x="20" y="30" class="h3">Wallet 1293</text>
         <text x="20" y="58" class="h1">$6,900,000</text>

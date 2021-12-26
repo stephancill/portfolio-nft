@@ -1,11 +1,13 @@
-import logo from './logo.svg';
 import './App.css';
+import Demo from './components/demo';
+import tester from './components/tester';
 
 function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
+        LENS
+        <Demo/>
       </header>
     </div>
   );
