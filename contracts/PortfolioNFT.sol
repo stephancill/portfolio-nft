@@ -10,7 +10,7 @@ import "./PortfolioMetadata.sol";
 
 import "hardhat/console.sol";
 
-contract BalanceWatcherNFT is ERC721, Ownable {
+contract PortfolioNFT is ERC721, Ownable {
     using Counters for Counters.Counter;
     using EnumerableSet for EnumerableSet.AddressSet;
 
@@ -23,7 +23,7 @@ contract BalanceWatcherNFT is ERC721, Ownable {
 
     IPriceFetcher public priceFetcher;
 
-    constructor(address _baseTokenAddress) ERC721("Balance Watcher", "WATCH") {
+    constructor(address _baseTokenAddress) ERC721("Lens Portfolio", "LENS") {
         // TODO: Track tokens on L2s
         // TODO: Track multiple addresses
         // TODO: Synthetic version
