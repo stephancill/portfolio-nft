@@ -8,15 +8,9 @@ import "./IPriceFetcher.sol";
 import "./OStrings.sol";
 import "./CustomSort.sol";
 import "./PortfolioData.sol";
+import "./IPortfolioNFT.sol";
 
 import "hardhat/console.sol";
-
-interface IPortfolioTracker is IERC721 {
-    function priceFetcher() external view returns (IPriceFetcher);
-    function baseTokenAddress() external view returns (address);
-    function tokenAddresses() external view returns (address);
-    function getTokenAddresses(uint256 tokenId) external view returns (address[] memory);
-}
 
 interface IPortfolioMetadata {
     function tokenURI(uint256 tokenId) external view returns (string memory);
@@ -26,11 +20,11 @@ contract PortfolioMetadata is IPortfolioMetadata {
     uint256 constant DECIMALS = 3;
 
     address portfolioTrackerAddress;
-    IPortfolioTracker portfolioTracker;
+    IPortfolioNFT portfolioTracker;
 
     constructor(address _portfolioTrackerAddress) {
         portfolioTrackerAddress = _portfolioTrackerAddress;
-        portfolioTracker = IPortfolioTracker(portfolioTrackerAddress);
+        portfolioTracker = IPortfolioNFT(portfolioTrackerAddress);
     }
 
     function getPortfolioData(uint256 tokenId) public view returns (PortfolioData memory) {

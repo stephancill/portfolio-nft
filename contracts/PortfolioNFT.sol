@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "./IPriceFetcher.sol";
+import "./IPortfolioNFT.sol";
 import "./PortfolioMetadata.sol";
 
 import "hardhat/console.sol";
