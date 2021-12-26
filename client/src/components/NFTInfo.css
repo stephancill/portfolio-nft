@@ -1,0 +1,10 @@
+.leftDivider {
+  background: linear-gradient(108.94deg, #bd6185 0%, #6a619b 100%);
+  width: 2px;
+  height: 100px;
+}
+
+.subText {
+  margin-top: -20px;
+  margin-left: 20px;
+}
