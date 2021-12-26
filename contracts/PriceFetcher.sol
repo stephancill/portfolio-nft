@@ -5,6 +5,7 @@ import "./IPriceFetcher.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
+
 import "hardhat/console.sol";
 
 contract PriceFetcher is IPriceFetcher  {
@@ -19,6 +20,7 @@ contract PriceFetcher is IPriceFetcher  {
     function quote(address _baseTokenAddress, address _tokenAddress) public view override returns (uint256) {
         // https://ethereum.stackexchange.com/a/94173
         // TODO: Check multiple sources for greatest liquidity
+        // TODO: Use router to find path with most liquidity
         if (_baseTokenAddress == _tokenAddress) {
             return 1;
         }

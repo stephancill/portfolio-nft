@@ -32,7 +32,8 @@ describe("BalanceNFT Tests", function () {
   let token4
   let token5
   let WETH
-  let balanceWatcherNFT
+  let portfolioNFT
+  let portfolioMetadata
   let priceFetcher
   let baseToken
 
@@ -98,8 +99,15 @@ describe("BalanceNFT Tests", function () {
     const PriceFetcher = await ethers.getContractFactory('PriceFetcher')
     priceFetcher = await PriceFetcher.deploy(pairFactory.address)
 
-    const BalanceWatcherNFT = await ethers.getContractFactory('BalanceWatcherNFT')
-    balanceWatcherNFT = await BalanceWatcherNFT.deploy(baseToken.address, priceFetcher.address)
+    const PortfolioNFT = await ethers.getContractFactory('PortfolioNFT')
+    portfolioNFT = await PortfolioNFT.deploy(baseToken.address)
+
+    await portfolioNFT.setPriceFetcherAddress(priceFetcher.address)
+
+    const PortfolioMetadata = await ethers.getContractFactory('PortfolioMetadata')
+    portfolioMetadata = await PortfolioMetadata.deploy(portfolioNFT.address)
+
+    await portfolioNFT.setPortfolioMetadataAddress(portfolioMetadata.address);
   })
 
   beforeEach(async () => {
@@ -120,7 +128,7 @@ describe("BalanceNFT Tests", function () {
   });
 
   it("Should produce the correct SVG data", async function () {
-    await balanceWatcherNFT.mint(account1.address)
+    await portfolioNFT.mint(account1.address)
     
     const tokenId = 1
 
@@ -135,10 +143,10 @@ describe("BalanceNFT Tests", function () {
     }))
 
     await Promise.all(trackedTokens.map(async (token) => {
-      await balanceWatcherNFT.connect(account1).trackToken(tokenId, token.address)
+      await portfolioNFT.connect(account1).trackToken(tokenId, token.address)
     }))
     
-    const tokenURI = await balanceWatcherNFT.tokenURI(tokenId)
+    const tokenURI = await portfolioNFT.tokenURI(tokenId)
     const tokenURIDecoded = atob(tokenURI.split(",")[1])
     const decodedSvg = atob(JSON.parse(tokenURIDecoded).image.split(",")[1])
 
