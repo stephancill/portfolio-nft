@@ -1,4 +1,5 @@
 const { expect } = require("chai");
+const { Contract } = require("ethers");
 const { ethers } = require("hardhat");
 const BN = ethers.BigNumber
 
@@ -108,6 +109,15 @@ describe("BalanceNFT Tests", function () {
     portfolioMetadata = await PortfolioMetadata.deploy(portfolioNFT.address)
 
     await portfolioNFT.setPortfolioMetadataAddress(portfolioMetadata.address);
+
+    // Gas estimate
+    // let totalGas = BN.from("0")
+    // const a = [priceFetcher, portfolioNFT, portfolioMetadata].map(contract => {
+    //   console.log(contract.deployTransaction.gasLimit)
+    //   totalGas.add(contract.deployTransaction.gasLimit)
+    // })
+
+    // console.log(totalGas)
   })
 
   beforeEach(async () => {
@@ -145,6 +155,15 @@ describe("BalanceNFT Tests", function () {
     await Promise.all(trackedTokens.map(async (token) => {
       await portfolioNFT.connect(account1).trackToken(tokenId, token.address)
     }))
+
+    // await Promise.all([1, 2, 3, 4, 5, 6, 7, 8, 9].map(async (i) => {
+    //   const tokenURI = await portfolioNFT.tokenURI(i)
+    //   const tokenURIDecoded = atob(tokenURI.split(",")[1])
+    //   const decodedSvg = atob(JSON.parse(tokenURIDecoded).image.split(",")[1])
+
+    //   console.log("\n")
+    //   console.log(decodedSvg)
+    // }))
     
     const tokenURI = await portfolioNFT.tokenURI(tokenId)
     const tokenURIDecoded = atob(tokenURI.split(",")[1])
@@ -157,6 +176,8 @@ describe("BalanceNFT Tests", function () {
       expect(decodedSvg).to.contain(ethers.utils.commify(ethers.utils.formatUnits(balance, decimals)))
       expect(decodedSvg).to.contain(`$${ethers.utils.commify(ethers.utils.formatUnits(value, decimals)).replace(".0", "")}`) // TODO: Round bignumber instead of this
     })
+
+    
   })
 });
 
