@@ -1,0 +1,14 @@
+.percContainer {
+  width: 100%;
+  display: flex;
+  margin-top: 30px;
+}
+.left {
+  background: linear-gradient(90deg, #6f4785 0%, #a978c4 100%);
+  border-radius: 5px 0px 0px 5px;
+  height: 10px;
+}
+.right {
+  background: #2a3c53;
+  border-radius: 0px 5px 5px 0px;
+}

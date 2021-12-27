@@ -44,7 +44,7 @@ const Demo = () => {
     setInterval(function(){
       populate()
       console.log("s")
-    }, 1500);
+    }, 1000);
    }
 
     
@@ -54,9 +54,9 @@ const Demo = () => {
   var h3 = "{ font: normal 14px sans-serif; fill:white}"
 
   return (
-    <div >
+    <div>
       {obj1}
-      <svg width="300" height="300" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="350" height="350" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
         <style>
           .h1 {h1}
           .h2 {h2}
@@ -74,11 +74,23 @@ const Demo = () => {
         <stop stop-color={col11} stop-opacity="1"/> 
         <stop offset="0.5" stop-color={col12} />
         </linearGradient>
-        <linearGradient id="stro" gradientUnits="userSpaceOnUse">
-        <stop stop-color="#BF953F"/>
-        <stop offset="0.5" stop-color="#FCF6BA" />
+        <linearGradient id="stroke" x1="20%" y1="60%" x2="30%" y2="0%">
+        <stop offset="50%"   stop-color="#fff" />
+        <stop offset="100%" stop-color="#fff" />
         </linearGradient>
         </defs>
+        <text x="20" y="30" class="h3">Wallet 1293</text>
+        <text x="20" y="58" class="h1">$6,923,039</text>
+        <text x="20" y="100" class="h2">KLIMA</text><text x="150" y="100" class="h2">$4,930,323</text>
+        <text x="20" y="114" class="h3">220.32</text>
+        <text x="20" y="145" class="h2">OHM</text><text x="150" y="145" class="h2">$1,930,242</text>
+        <text x="20" y="159" class="h3">20.32</text>
+        <text x="20" y="190" class="h2">ETH</text><text x="150" y="190" class="h2">$50,542</text>
+        <text x="20" y="204" class="h3">3.02</text>
+        <text x="20" y="235" class="h2">USDC</text><text x="150" y="235" class="h2">$9,200</text>
+        <text x="20" y="249" class="h3">9200.42</text>
+        <text x="20" y="280" class="h2">Other</text><text x="150" y="280" class="h2">$2,732</text>
+        <rect width="300" height="300" fill="none" stroke="url(#stroke)"  stroke-width="1"/>
       </svg>
     </div>
   );
