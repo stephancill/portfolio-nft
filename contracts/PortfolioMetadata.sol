@@ -76,44 +76,27 @@ contract PortfolioMetadata is IPortfolioMetadata {
         
         string[4] memory colors;
 
-        colors[0] = hexColorString(
-            randomUint(tokenId, entropyOffset++), 
-            randomUint(tokenId, entropyOffset++), 
-            randomUint(tokenId, entropyOffset++),
-            0x66
-        );
-        colors[1] = hexColorString(
-            randomUint(tokenId, entropyOffset++), 
-            randomUint(tokenId, entropyOffset++), 
-            randomUint(tokenId, entropyOffset++),
-            0x66
-        );
-        colors[2] = hexColorString(
-            randomUint(tokenId, entropyOffset++), 
-            randomUint(tokenId, entropyOffset++), 
-            randomUint(tokenId, entropyOffset++),
-            0x19
-        );
-        colors[3] = hexColorString(
-            randomUint(tokenId, entropyOffset++), 
-            randomUint(tokenId, entropyOffset++), 
-            randomUint(tokenId, entropyOffset++),
-            0x19
-        );
+        for (uint256 i = 0; i < 4; i++) {
+            colors[i] = rgbaColorString(
+                randomUint(tokenId, entropyOffset++), 
+                randomUint(tokenId, entropyOffset++), 
+                randomUint(tokenId, entropyOffset++),
+                i%2 == 0 ? "0.4" : "0.1"
+            );
+        }
 
         output = string(abi.encodePacked(
             output, '<defs>', 
-            generateGradient(colors[0], colors[2], 0), 
-            generateGradient(colors[1], colors[3], 1),
+            generateGradient(colors[0], colors[1], 0), 
+            generateGradient(colors[2], colors[3], 1),
             '<style>.base { font: bold 30px sans-serif; fill: white}.item { font: normal 24px sans-serif; fill: white}.sub { font: normal 14px sans-serif; fill: white}</style></defs>',
             '<rect width="300" height="300" fill="#272727"/>'
         ));
         
         PortfolioData memory portfolioData = getPortfolioData(tokenId);
 
-        // TODO: Proper width ranges
-        uint256 width1 = WIDTH * randomUint(tokenId, entropyOffset++) / uint256(255);
-        uint256 width2 = WIDTH * randomUint(tokenId, entropyOffset++) / uint256(255);
+        uint256 width1 = 80 + ((WIDTH - 80) * ((randomUint(tokenId, entropyOffset++) * 1000 / uint256(255) / 100))) / 10; // Range 80-300
+        uint256 width2 = 80 + ((WIDTH - 80) * ((randomUint(tokenId, entropyOffset++) * 1000 / uint256(255) / 100))) / 10; // Range 80-300
 
         if (width2 > width1) {
             uint256 tmp = width1;
@@ -175,7 +158,7 @@ contract PortfolioMetadata is IPortfolioMetadata {
     function generateCircle(uint256 diameter, uint256 rotate, uint256 index) public pure returns (string memory) {
         string memory center = OStrings.toString(WIDTH/2);
         return string(abi.encodePacked(
-            '<circle fill=url(#paint', OStrings.toString(index), ') transform="rotate(', 
+            '<circle fill="url(#paint', OStrings.toString(index), ')" transform="rotate(', 
             OStrings.toString(rotate), '', center, ' ', center, ')" cx="', center, '" cy="', center, '" r="', 
             OStrings.toString(diameter/2), '" />'));
     }
@@ -184,13 +167,24 @@ contract PortfolioMetadata is IPortfolioMetadata {
         string memory origin = OStrings.toString((WIDTH-width)/2);
         string memory center = OStrings.toString(WIDTH/2);
         return string(abi.encodePacked(
-            '<rect fill=url(#paint', OStrings.toString(index), ') x="', origin, '" y="', origin, '"', 
+            '<rect fill="url(#paint', OStrings.toString(index), ')" x="', origin, '" y="', origin, '"', 
             ' width="', OStrings.toString(width), '" height="', OStrings.toString(width), '" transform="rotate(', 
             OStrings.toString(rotate), ' ', center, ' ', center, ')" />'));
     }
 
     function hexColorString(uint256 r, uint256 g, uint256 b, uint256 a) public pure returns (string memory) {
         return OStrings.toHexColorString((r << 16) | (g << 8) | b, a);
+    }
+
+    function rgbaColorString(uint256 r, uint256 g, uint256 b, string memory a) public pure returns (string memory) {
+        return string(abi.encodePacked(
+            'rgba(', 
+            OStrings.toString(r), ', ', 
+            OStrings.toString(g), ', ', 
+            OStrings.toString(b), ', ', 
+            a,
+            ')'
+        ));
     }
 
     function generateGradient(string memory startColor, string memory endColor, uint256 index) public pure returns (string memory) {
