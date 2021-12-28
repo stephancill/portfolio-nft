@@ -1,7 +1,14 @@
+import { useState } from 'react';
 import demoNFT from "./../img/demoNFT.png"
 import "./portfolioSetup.css"
+import {IoIosArrowDropleftCircle} from 'react-icons/io'
 
 const PortfolioSetup = ({trackedAssets}) => {
+  const [addingToken,setAddingToken] = useState(true)
+
+  const back = () => {
+    setAddingToken(false)
+  }
 
   let tokenPrint =  []
   if (trackedAssets) {
@@ -19,7 +26,7 @@ const PortfolioSetup = ({trackedAssets}) => {
             <button className="tableBtn" id={i}>Remove</button>
           </div>
         </div>
-        { i != trackedAssets.length-1 && 
+        { i !== trackedAssets.length-1 && 
          <div className="tableDiv"></div>
         }
       </>)
@@ -33,13 +40,28 @@ const PortfolioSetup = ({trackedAssets}) => {
       <button className="NFTBtn">
         <img src={demoNFT}></img>
       </button>
-      <h3 style={{marginTop:"30px"}}>Wallet 202322</h3>
-      <div className="b2">
-        {tokenPrint}
-        <button className="addTokenBtn">Add Token</button>
-      </div>
-      <button style={{marginTop:"30px"}}>Update</button>
+      {!addingToken ? <>
+        <h3 style={{marginTop:"30px"}}>Wallet 202322</h3>
+        <div className="b2">
+          {tokenPrint}
+          <button className="addTokenBtn">Add Token</button>
+        </div>
+        <button style={{marginTop:"30px"}}>Remove</button>
+      </> : <>
+        <div className="backConatiner">
+        <h3 style={{marginTop:"30px",display:"flex"}}>Select a token </h3>
+        <div style={{paddingLeft:"200px",paddingTop:"20px"}}>
+          <button className="backBtn" onClick={back}>
+            <IoIosArrowDropleftCircle className="back"/>
+          </button>
+        </div>
+        </div>
+        <input placeholder="Search a name, address or symbol"></input>
+        <div className="b2">
+        </div>
+      </>}
     </div>
+    
   )
 }
 

@@ -7,7 +7,7 @@ const NFTInfo = () => {
         <div className="leftDivider"></div>
         <div className="subText">
           <h3 style={{textAlign:"left"}} >1. Mint a Lens Portfolio NFT</h3>
-          <h3 style={{textAlign:"left"}}>2. Configure the NFT to track up to 100 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;tokens. Your top 4 tokens will be &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;displayed on the NFT</h3>
+          <h3 style={{textAlign:"left"}}>2. Configure the NFT to track as many &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;tokens as you want. Your top 4 tokens &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;will be displayed on the NFT</h3>
         </div>
       </div>
    </div>
