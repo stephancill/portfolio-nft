@@ -31,7 +31,7 @@ library CustomSort {
     }
  
 
-    function sortByValue(AddressBalanceValue[100] memory arr, int left, int right) internal view {
+    function sortByValue(AddressBalanceValue[] memory arr, int left, int right) internal view {
         int i = left;
         int j = right;
         if(i==j) return;
@@ -52,28 +52,4 @@ library CustomSort {
         if (i < right)
             sortByValue(arr, i, right);
     }
-
-    // Sorry
-    function sortByAddress(AddressBalanceValue[100] memory arr, int left, int right) internal view {
-        int i = left;
-        int j = right;
-        if(i==j) return;
-        AddressBalanceValue memory pivot = arr[uint(left + (right - left) / 2)];
-        while (i <= j) {
-            while (arr[uint(i)].addr > pivot.addr) i++;
-            while (pivot.addr > arr[uint(j)].addr) j--;
-            if (i <= j && arr[uint(i)].value == 0) {
-                AddressBalanceValue memory tmp = arr[uint(j)];
-                arr[uint(j)] = arr[uint(i)];
-                arr[uint(i)] = tmp;
-                i++;
-                j--;
-            }
-        }
-        if (left < j)
-            sortByValue(arr, left, j);
-        if (i < right)
-            sortByValue(arr, i, right);
-    }
-
 }

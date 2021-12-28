@@ -1,5 +1,4 @@
 const { expect } = require("chai");
-const { Contract } = require("ethers");
 const { ethers } = require("hardhat");
 const BN = ethers.BigNumber
 const UniswapV2Pair = require("@uniswap/v2-core/build/UniswapV2Pair.json")
@@ -293,7 +292,7 @@ describe("BalanceNFT Tests", function () {
     const {factory: _pairFactory, router} = await deployUniswap({deployer, WETH})
     pairFactory = _pairFactory
 
-    await Promise.all([token1, token2, token3, token4, token5].map(async (token, i) => {
+    await Promise.all([token1, token2, WETH, token3, token4, token5].map(async (token, i) => {
       await createPairWithPrice({
         signer: account2,
         pairFactory,
@@ -307,17 +306,6 @@ describe("BalanceNFT Tests", function () {
     const PriceFetcher = await ethers.getContractFactory('PriceFetcher')
     priceFetcher = await PriceFetcher.deploy(pairFactory.address)
     priceFetcher["quote"] = priceFetcher["quote(address,address)"]
-
-    const PortfolioNFT = await ethers.getContractFactory('PortfolioNFT')
-    portfolioNFT = await PortfolioNFT.deploy(baseToken.address)
-
-    await portfolioNFT.setPriceFetcherAddress(priceFetcher.address)
-
-    const PortfolioMetadata = await ethers.getContractFactory('PortfolioMetadata')
-    portfolioMetadata = await PortfolioMetadata.deploy(portfolioNFT.address)
-
-    await portfolioNFT.setPortfolioMetadataAddress(portfolioMetadata.address);
-
     // Gas estimate
     // let totalGas = BN.from("0")
     // const a = [priceFetcher, portfolioNFT, portfolioMetadata].map(contract => {
@@ -329,7 +317,15 @@ describe("BalanceNFT Tests", function () {
   })
 
   beforeEach(async () => {
-    
+    const PortfolioNFT = await ethers.getContractFactory('PortfolioNFT')
+    portfolioNFT = await PortfolioNFT.deploy(baseToken.address, WETH.address, "ETH")
+
+    await portfolioNFT.setPriceFetcherAddress(priceFetcher.address)
+
+    const PortfolioMetadata = await ethers.getContractFactory('PortfolioMetadata')
+    portfolioMetadata = await PortfolioMetadata.deploy(portfolioNFT.address)
+
+    await portfolioNFT.setPortfolioMetadataAddress(portfolioMetadata.address);
   })
 
   it("Should deploy uniswap pairs", async function() {
@@ -345,36 +341,123 @@ describe("BalanceNFT Tests", function () {
     expect(await token1.balanceOf(account1.address)).to.equal(ethers.utils.parseUnits("1000"))
   });
 
+  it("Should track WETH by default", async function () {
+    await portfolioNFT.connect(account1).mint(account1.address)
+    const tokenId = 1
+    const trackedTokens = await portfolioNFT.getTokenAddresses(tokenId)
+    expect(trackedTokens.length).to.equal(1)
+    expect(trackedTokens[0]).to.equal(WETH.address)
+  })
+
+  it("Should track tokens", async function () {
+    await portfolioNFT.connect(account1).mint(account1.address)
+    const tokenId = 1
+    const trackedTokensBefore = await portfolioNFT.getTokenAddresses(tokenId)
+
+    await portfolioNFT.connect(account1).trackToken(tokenId, token1.address)
+    const trackedTokensAfter = await portfolioNFT.getTokenAddresses(tokenId)
+
+    expect(trackedTokensBefore.length+1).to.equal(trackedTokensAfter.length)
+    expect(trackedTokensAfter).to.contain(token1.address)
+  })
+
+  it("Should batch track tokens", async function () {
+    await portfolioNFT.connect(account1).mint(account1.address)
+    const tokenId = 1
+    const trackedTokensBefore = await portfolioNFT.getTokenAddresses(tokenId)
+
+    await portfolioNFT.connect(account1).trackTokens(tokenId, [token1.address, token2.address])
+    const trackedTokensAfter = await portfolioNFT.getTokenAddresses(tokenId)
+
+    expect(trackedTokensBefore.length+2).to.equal(trackedTokensAfter.length)
+    expect(trackedTokensAfter).to.contain(token1.address)
+    expect(trackedTokensAfter).to.contain(token2.address)
+  })
+
+  it("Should remove tracked tokens", async function () {
+    await portfolioNFT.connect(account1).mint(account1.address)
+    const tokenId = 1
+    let trackedTokensBefore = await portfolioNFT.getTokenAddresses(tokenId)
+
+    await portfolioNFT.connect(account1).trackToken(tokenId, token1.address)
+    let trackedTokensAfter = await portfolioNFT.getTokenAddresses(tokenId)
+
+    expect(trackedTokensBefore.length+1).to.equal(trackedTokensAfter.length)
+    expect(trackedTokensAfter).to.contain(token1.address)
+
+    trackedTokensBefore = trackedTokensAfter
+
+    await portfolioNFT.connect(account1).removeToken(tokenId, token1.address)
+
+    trackedTokensAfter = await portfolioNFT.getTokenAddresses(tokenId)
+
+    expect(trackedTokensBefore.length-1).to.equal(trackedTokensAfter.length)
+    expect(trackedTokensAfter).not.to.contain(token1.address)
+  })
+
+  it("Should batch remove tracked tokens", async function () {
+    await portfolioNFT.connect(account1).mint(account1.address)
+    const tokenId = 1
+    let trackedTokensBefore = await portfolioNFT.getTokenAddresses(tokenId)
+
+    await portfolioNFT.connect(account1).trackTokens(tokenId, [token1.address, token2.address])
+    let trackedTokensAfter = await portfolioNFT.getTokenAddresses(tokenId)
+
+    expect(trackedTokensBefore.length+2).to.equal(trackedTokensAfter.length)
+    expect(trackedTokensAfter).to.contain(token1.address)
+    expect(trackedTokensAfter).to.contain(token2.address)
+
+    trackedTokensBefore = trackedTokensAfter
+
+    await portfolioNFT.connect(account1).removeTokens(tokenId, [token1.address, token2.address])
+
+    trackedTokensAfter = await portfolioNFT.getTokenAddresses(tokenId)
+
+    expect(trackedTokensBefore.length-2).to.equal(trackedTokensAfter.length)
+    expect(trackedTokensAfter).not.to.contain(token1.address)
+    expect(trackedTokensAfter).not.to.contain(token2.address)
+  })
+
   it("Should produce the correct SVG data", async function () {
-    await portfolioNFT.mint(account1.address)
+    await portfolioNFT.connect(account1).mint(account1.address)
     
     const tokenId = 1
+    
+    const WETHSymbol = await portfolioNFT.WETHSymbol()
 
-    const trackedTokens = [token1, token2, token3, token4, token5, baseToken]
+    const trackedTokens = [token1, token2, token3, token4, token5, baseToken, WETH]
+
+    await Promise.all(trackedTokens.map(async (token) => {
+      await portfolioNFT.connect(account1).trackToken(tokenId, token.address)
+    }))
+
     const tokenDetails = await Promise.all(trackedTokens.map(async (token) => {
-      const balance = await token.connect(account1).balanceOf(account1.address)
-      const symbol = await token.symbol()
+      let balance = await token.connect(account1).balanceOf(account1.address)
+      let symbol = await token.symbol()
+      if (token.address === WETH.address) {
+        const ethBalance = await ethers.provider.getBalance(account1.address)
+        balance = balance.add(ethBalance.toString())
+        symbol = WETHSymbol
+      }
       const decimals = await token.decimals() 
       const [price, priceDecimals] = await priceFetcher.quote(baseToken.address, token.address)
       const value = price.mul(balance).div((10**priceDecimals).toString())
       return {balance, address: token.address, symbol, decimals, price, value}
     }))
-
-    await Promise.all(trackedTokens.map(async (token) => {
-      await portfolioNFT.connect(account1).trackToken(tokenId, token.address)
-    }))
     
-    const tokenURI = await portfolioNFT.tokenURI(tokenId)
+    const tokenURI = await portfolioNFT.connect(account1).tokenURI(tokenId)
     const tokenURIDecoded = atob(tokenURI.split(",")[1])
     const decodedSvg = atob(JSON.parse(tokenURIDecoded).image.split(",")[1])
 
     // console.log(decodedSvg)
-    console.log(JSON.parse(tokenURIDecoded).image)
+    // console.log(JSON.parse(tokenURIDecoded).image)
 
-    tokenDetails.sort((a, b) => b.value.sub(a.value)).splice(0, 4).map(({balance, symbol, decimals, value}) => {
+    tokenDetails.sort((a, b) => b.value.sub(a.value)).splice(0, 4).map(({balance, symbol, decimals, value, address}) => {
       expect(decodedSvg).to.contain(symbol)
-      expect(decodedSvg).to.contain(ethers.utils.commify(ethers.utils.formatUnits(balance, decimals)))
-      expect(decodedSvg).to.contain(`$${ethers.utils.commify(ethers.utils.formatUnits(value, decimals)).replace(".0", "")}`) // TODO: Round bignumber instead of this
+      let [whole, fraction] = ethers.utils.commify(ethers.utils.formatUnits(balance, decimals)).split(".")
+      const balanceString = `${whole}.${fraction.slice(0,3)}`
+      expect(decodedSvg).to.contain(balanceString)
+      expect(decodedSvg).to.contain(`$${ethers.utils.commify(ethers.utils.formatUnits(value, decimals)).split(".")[0]}`) // TODO: Round bignumber instead of this
     })    
   })
 });
