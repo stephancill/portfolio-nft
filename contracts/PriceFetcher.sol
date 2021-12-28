@@ -4,12 +4,13 @@ pragma solidity ^0.8.0;
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol";
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
-import "./IPriceFetcher.sol";
-import "./CustomSort.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "./interfaces/IPriceFetcher.sol";
+import "./libraries/CustomSort.sol";
 
 import "hardhat/console.sol";
 
-contract PriceFetcher is IPriceFetcher  {
+contract PriceFetcher is IPriceFetcher, Ownable {
 
     struct Counter {
         uint256 value;
@@ -28,6 +29,10 @@ contract PriceFetcher is IPriceFetcher  {
     uint256 constant public DECIMALS = 6;
 
     constructor(address _pairFactoryAddress) {
+        setPairFactoryAddress(_pairFactoryAddress);
+    }
+
+    function setPairFactoryAddress(address _pairFactoryAddress) public onlyOwner {
         pairFactoryAddress = _pairFactoryAddress;
         pairFactory = IUniswapV2Factory(_pairFactoryAddress);
     }

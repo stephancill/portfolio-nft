@@ -1,4 +1,7 @@
 require("@nomiclabs/hardhat-waffle");
+require('hardhat-deploy');
+require("dotenv").config()
+
 const { TASK_COMPILE, TASK_NODE } = require("hardhat/builtin-tasks/task-names")
 const open = require('open')
 
@@ -48,4 +51,16 @@ task("generate", "Outputs 10 random token SVGs", async (taskArgs, hre) => {
  */
 module.exports = {
   solidity: "0.8.4",
+  networks: {
+    ropsten: {
+      url: `https://ropsten.infura.io/v3/${process.env.ROPSTEN_PROJECT_ID}`,
+      accounts: [process.env.ROPSTEN_DEPLOYER]
+    }
+  },
+  namedAccounts: {
+    deployer: 0
+  },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY
+  }
 };

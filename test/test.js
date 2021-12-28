@@ -55,7 +55,8 @@ async function createPairWithPrice({signer, pairFactory, router, baseToken, othe
 
 async function deployTokens({decimals=18, mintAccount=undefined, mintAmount=100_000, numberOfTokens=10}) {
   const tokens = Promise.all([...new Array(numberOfTokens)].map(async (_, i) => {
-    const ERC20 = await ethers.getContractFactory('ERC20PresetMinterPauser')
+    const ERC20 = await ethers.getContractFactory('ERC20')
+    console.log(ERC20)
     const token = await ERC20.deploy(`Token ${i+1}`, `TOKEN${i+1}`)
     if (mintAccount) {
       await token.mint(mintAccount, ethers.utils.parseUnits(`${mintAmount}`, decimals))

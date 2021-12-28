@@ -5,8 +5,8 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "./IPriceFetcher.sol";
-import "./IPortfolioNFT.sol";
+import "./interfaces/IPriceFetcher.sol";
+import "./interfaces/IPortfolioNFT.sol";
 import "./PortfolioMetadata.sol";
 
 import "hardhat/console.sol";
