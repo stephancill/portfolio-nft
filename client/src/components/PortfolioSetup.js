@@ -1,11 +1,11 @@
-import { useEffect,useState } from 'react';
+import {useState } from 'react';
 import demoNFT from "./../img/demoNFT.png"
 import "./portfolioSetup.css"
-import {IoIosArrowDropleftCircle} from 'react-icons/io'
-import { isElement } from 'react-dom/test-utils';
+import {IoIosArrowDropleftCircle,IoIosRemoveCircle} from 'react-icons/io'
 
 const PortfolioSetup = ({trackedAssets}) => {
-  const [addingToken,setAddingToken] = useState(true)
+  const [addingToken,setAddingToken] = useState(false)
+  const [searchTokens,setSearchTokens] = useState([])
   const [tokens,setTokens] = useState(trackedAssets)
 
   const addToken = () => {
@@ -23,7 +23,7 @@ const PortfolioSetup = ({trackedAssets}) => {
   }
 
   const back = () => {
-    setAddingToken(false)
+    setAddingToken(!addingToken)
   }
 
   return (
@@ -45,21 +45,23 @@ const PortfolioSetup = ({trackedAssets}) => {
                 <h3>{token.balance}</h3>
               </div>
               <div className="col" style={{margin:"1px",marginRight:"10px"}}>
-                <button className="tableBtn" name={token.symbol} onClick={removeToken}>Remove</button>
+                <button className=" removeBtn" name={token.symbol} onClick={removeToken}>
+                <IoIosRemoveCircle className="removeIcon"/>
+                </button>
               </div>
             </div>
             {i!==tokens.length-1 ?<div className="tableDiv"></div>: <></>}
             </>
           ))}
         </div>
-        <button className="addTokenBtn" onClick={addToken}>Add Token</button>
+        <button className="addTokenBtn" onClick={back}>Add New Token</button>
         <button style={{marginTop:"30px"}}>Update</button>
       </> : <>
         <div className="backConatiner">
         <h3 style={{marginTop:"30px",display:"flex"}}>Select a token </h3>
-        <div style={{paddingLeft:"200px",paddingTop:"20px"}}>
+        <div style={{paddingLeft:"200px",paddingTop:"25px"}}>
           <button className="backBtn" onClick={back}>
-            <IoIosArrowDropleftCircle className="back"/>
+            <IoIosArrowDropleftCircle className="backIcon"/>
           </button>
         </div>
         </div>
