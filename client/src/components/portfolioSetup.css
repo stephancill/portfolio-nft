@@ -1,0 +1,105 @@
+.NFTBtn {
+  padding: 0px;
+  height: 350px;
+  border-color: white;
+}
+.NFTBtn:hover {
+  border: #ab78c5 6px solid !important;
+}
+.NFTBtn:active {
+  border: #c06286 6px solid !important;
+}
+.addTokenBtn {
+  height: 40px;
+  background-color: #7b578e;
+  font-size: 18px;
+  border: none;
+  color: white;
+  margin-top: 10px;
+
+  height: 36px;
+}
+.addTokenBtn:hover {
+  background: #a978c4;
+}
+
+input {
+  width: 346px;
+  padding: 0px;
+  height: 40px;
+  border-radius: 5px;
+  border: 1px #ab78c5 solid;
+  stroke: none;
+  background: linear-gradient(90deg, #2e3f58 0%, #2b3440 100%);
+  color: #ab78c5;
+  text-align: center;
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+input:focus {
+  outline-width: 0;
+}
+::placeholder {
+  color: #ab78c5;
+}
+
+.b2 {
+  border: 1px solid white;
+  max-height: 200px;
+  padding: 2px;
+  position: relative;
+  overflow-y: auto;
+}
+.row {
+  display: flex;
+}
+.col {
+  flex: 50%;
+  height: 44px;
+  padding-left: 10px;
+  display: flex;
+  align-items: center;
+}
+.tableDiv {
+  height: 1px;
+  background-color: black;
+  width: 323px;
+  margin-left: 10px;
+}
+.tableBtn {
+  width: 100%;
+  background: none;
+  border: 1px solid #a978c4;
+  outline: none;
+  font-size: 16px;
+  font-weight: 400;
+  color: #a978c4;
+  height: 24px;
+  margin-top: -2px;
+}
+.tableBtn:hover {
+  background: #a978c4;
+  color: white;
+  border: #a978c4;
+}
+.tableBtn:active {
+  background: #885095;
+}
+
+.backBtn {
+  height: 20px;
+  width: 30px;
+  background: none;
+  border: none;
+}
+.backBtn:hover {
+  background: none;
+  color: #d86d96;
+}
+.backConatiner {
+  display: flex;
+}
+.back {
+  width: 35px;
+  height: 35px;
+}

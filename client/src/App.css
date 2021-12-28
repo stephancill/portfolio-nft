@@ -13,6 +13,7 @@
 .container {
   display: inline-block;
   width: 350px;
+  margin-bottom: 200px;
 }
 
 button {
@@ -27,9 +28,9 @@ button {
   height: 50px;
 }
 button:hover {
-  background: #673c71;
+  background: #c06286;
   color: white;
-  border: #673c71;
+  border: #c06286;
 }
 button:active {
   background: #885095;
@@ -52,7 +53,7 @@ h1 {
 }
 h2 {
   font-size: 36px;
-  text-decoration-line: underline;
+  text-align: left;
 }
 h3 {
   font-size: 18px;
