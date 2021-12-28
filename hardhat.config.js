@@ -36,7 +36,7 @@ task("generate", "Outputs 10 random token SVGs", async (taskArgs, hre) => {
     const decodedSvg = atob(JSON.parse(tokenURIDecoded).image.split(",")[1])
     console.log(decodedSvg)
 
-    const x = await open(imageData, {app: {name: "firefox"}})
+    const x = await open(imageData, {app: {name: "google chrome"}})
   }))
 });
 

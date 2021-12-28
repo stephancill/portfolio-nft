@@ -69,8 +69,8 @@ contract PortfolioNFT is ERC721, Ownable {
         // Require that uni price > 0 TODO: Remove checking uni price - some social tokens don't have pools on uni
         // TODO: Add eth tracking (add amount to WETH balance to get ETH balance)
         // TODO: Use common token list and register custom tokens
-        uint256 price = priceFetcher.quote(baseTokenAddress, _tokenAddress);
-        require(price > 0, string(abi.encodePacked("Price must be non-zero: ", _tokenAddress)));
+        (uint256 price,) = priceFetcher.quote(baseTokenAddress, _tokenAddress);
+        require(price > 0, string(abi.encodePacked("Price must be non-zero: ")));
         tokenAddresses[_tokenId].add(_tokenAddress);
     }
 

@@ -44,9 +44,9 @@ contract PortfolioMetadata is IPortfolioMetadata {
             
             IERC20Metadata tokenContract = IERC20Metadata(_tokenAddress);
 
-            uint256 price = portfolioTracker.priceFetcher().quote(portfolioTracker.baseTokenAddress(), _tokenAddress);
+            (uint256 price, uint256 priceDecimals) = portfolioTracker.priceFetcher().quote(portfolioTracker.baseTokenAddress(), _tokenAddress);
             uint256 balance = tokenContract.balanceOf(portfolioTracker.ownerOf(tokenId)) / (10 ** (tokenContract.decimals()-DECIMALS));
-            uint256 value = price * balance / (10 ** DECIMALS);
+            uint256 value = price * balance / (10 ** (DECIMALS+priceDecimals));
 
             valueByAddress[i] = AddressBalanceValue(_tokenAddress, balance, value);
 
