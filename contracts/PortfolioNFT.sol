@@ -19,12 +19,14 @@ contract PortfolioNFT is ERC721, Ownable {
     mapping (uint256 => EnumerableSet.AddressSet) tokenAddresses;
 
     address public baseTokenAddress;   
+    address public WETHAddress;
+    string public WETHSymbol;
     address public priceFetcherAddress;
     address public portfolioMetadataAddress;
 
     IPriceFetcher public priceFetcher;
 
-    constructor(address _baseTokenAddress) ERC721("Lens Portfolio", "LENS") {
+    constructor(address _baseTokenAddress, address _WETHAddress, string memory _WETHSymbol) ERC721("Lens Portfolio", "LENS") {
         // TODO: Track tokens on L2s
         // TODO: Track multiple addresses
         // TODO: Synthetic version
@@ -35,6 +37,8 @@ contract PortfolioNFT is ERC721, Ownable {
         
         // TODO: Store baseTokenAddress by tokenId and let owner choose
         setBaseTokenAddress(_baseTokenAddress);
+        WETHAddress = _WETHAddress;
+        WETHSymbol = _WETHSymbol;
 
         // TODO: Modifier that checks if priceFetcher is set for functions that require it
     }
@@ -59,6 +63,8 @@ contract PortfolioNFT is ERC721, Ownable {
         uint256 newItemId = _tokenIds.current();
         _mint(_address, newItemId);
 
+        trackToken(newItemId, WETHAddress);
+
         return newItemId;
     }
 
@@ -66,11 +72,11 @@ contract PortfolioNFT is ERC721, Ownable {
         // Require that user is token owner
         require(ownerOf(_tokenId) == msg.sender, "Not owner of address");
         
-        // Require that uni price > 0 TODO: Remove checking uni price - some social tokens don't have pools on uni
         // TODO: Add eth tracking (add amount to WETH balance to get ETH balance)
-        // TODO: Use common token list and register custom tokens
-        (uint256 price,) = priceFetcher.quote(baseTokenAddress, _tokenAddress);
-        require(price > 0, string(abi.encodePacked("Price must be non-zero: ")));
+        // TODO: Use common default token list and register custom tokens
+        // TODO: Remove token
+        IERC20Metadata(_tokenAddress).symbol();
+        IERC20Metadata(_tokenAddress).balanceOf(msg.sender);
         tokenAddresses[_tokenId].add(_tokenAddress);
     }
 

@@ -31,7 +31,7 @@ contract PortfolioMetadata is IPortfolioMetadata {
     function getPortfolioData(uint256 tokenId) public view returns (PortfolioData memory) {
         address[] memory tokenAddresses = portfolioTracker.getTokenAddresses(tokenId);
         
-        AddressBalanceValue[100] memory valueByAddress;
+        AddressBalanceValue[] memory valueByAddress = new AddressBalanceValue[](tokenAddresses.length);
         PortfolioData memory portfolioData;
 
         portfolioData.tokenId = tokenId;
@@ -46,6 +46,9 @@ contract PortfolioMetadata is IPortfolioMetadata {
 
             (uint256 price, uint256 priceDecimals) = portfolioTracker.priceFetcher().quote(portfolioTracker.baseTokenAddress(), _tokenAddress);
             uint256 balance = tokenContract.balanceOf(portfolioTracker.ownerOf(tokenId)) / (10 ** (tokenContract.decimals()-DECIMALS));
+            if (_tokenAddress == portfolioTracker.WETHAddress()) { 
+                balance += portfolioTracker.ownerOf(tokenId).balance / (10 ** (tokenContract.decimals()-DECIMALS)); 
+            }
             uint256 value = price * balance / (10 ** (DECIMALS+priceDecimals));
 
             valueByAddress[i] = AddressBalanceValue(_tokenAddress, balance, value);
@@ -54,7 +57,6 @@ contract PortfolioMetadata is IPortfolioMetadata {
         }
 
         CustomSort.sortByValue(valueByAddress, 0, int(valueByAddress.length - 1));
-        CustomSort.sortByAddress(valueByAddress, 0, int(valueByAddress.length - 1));
 
         for (uint256 i = 0; i < tokenAddresses.length; i++) {
             uint256 value = valueByAddress[i].value;
@@ -126,8 +128,9 @@ contract PortfolioMetadata is IPortfolioMetadata {
 
             IERC20Metadata tokenContract = IERC20Metadata(tokenAddress);
 
+            string memory symbol = tokenAddress != portfolioTracker.WETHAddress() ? tokenContract.symbol() : portfolioTracker.WETHSymbol();
 
-            output = string(abi.encodePacked(output, '<text x="20" y="', OStrings.toString(100+45*i), '" class="item">', tokenContract.symbol(), '</text>'));
+            output = string(abi.encodePacked(output, '<text x="20" y="', OStrings.toString(100+45*i), '" class="item">', symbol, '</text>'));
             output = string(abi.encodePacked(output, '<text x="150" y="', OStrings.toString(100+45*i), '" class="item">$', OStrings.toStringCommaFormatWithDecimals(value, 999), '</text>'));
             output = string(abi.encodePacked(output, '<text x="20" y="', OStrings.toString(100+14+45*i), '" class="base sub">', OStrings.toStringCommaFormatWithDecimals(balance, DECIMALS), '</text>'));
         }

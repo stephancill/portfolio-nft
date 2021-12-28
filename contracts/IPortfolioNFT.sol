@@ -8,5 +8,7 @@ interface IPortfolioNFT is IERC721 {
     function priceFetcher() external view returns (IPriceFetcher);
     function baseTokenAddress() external view returns (address);
     function tokenAddresses() external view returns (address);
+    function WETHAddress() external view returns (address);
+    function WETHSymbol() external view returns (string memory);
     function getTokenAddresses(uint256 tokenId) external view returns (address[] memory);
 }
