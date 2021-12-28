@@ -72,7 +72,6 @@ contract PortfolioNFT is ERC721, Ownable {
         // Require that user is token owner
         require(ownerOf(_tokenId) == msg.sender, "Not owner of address");
         
-        // TODO: Add eth tracking (add amount to WETH balance to get ETH balance)
         // TODO: Use common default token list and register custom tokens
         // TODO: Remove token
         IERC20Metadata(_tokenAddress).symbol();
@@ -80,9 +79,21 @@ contract PortfolioNFT is ERC721, Ownable {
         tokenAddresses[_tokenId].add(_tokenAddress);
     }
 
+    function removeToken(uint256 _tokenId, address _tokenAddress) public {
+        // Require that user is token owner
+        require(ownerOf(_tokenId) == msg.sender, "Not owner of address");
+        tokenAddresses[_tokenId].remove(_tokenAddress);
+    }
+
     function trackTokens(uint256 _tokenId, address[] memory _tokenAddresses) public {
         for (uint256 i = 0; i < _tokenAddresses.length; i++) {
             trackToken(_tokenId, _tokenAddresses[i]);
+        }
+    }
+
+    function removeTokens(uint256 _tokenId, address[] memory _tokenAddresses) public {
+        for (uint256 i = 0; i < _tokenAddresses.length; i++) {
+            removeToken(_tokenId, _tokenAddresses[i]);
         }
     }
 
