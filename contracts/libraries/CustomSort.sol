@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity >=0.5.15;
 
-import "./PortfolioData.sol";
+import "./../structs/PortfolioData.sol";
 
 /**
  * @title Quicksort library in Solidity

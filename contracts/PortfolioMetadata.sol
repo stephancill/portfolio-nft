@@ -3,12 +3,15 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/interfaces/IERC721.sol";
 import "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
-import "./Base64.sol";
-import "./IPriceFetcher.sol";
-import "./OStrings.sol";
-import "./CustomSort.sol";
-import "./PortfolioData.sol";
-import "./IPortfolioNFT.sol";
+
+import "./libraries/Base64.sol";
+import "./libraries/OStrings.sol";
+import "./libraries/CustomSort.sol";
+
+import "./interfaces/IPortfolioNFT.sol";
+import "./interfaces/IPriceFetcher.sol";
+
+import "./structs/PortfolioData.sol";
 
 import "hardhat/console.sol";
 
