@@ -2,6 +2,8 @@ const { expect } = require("chai");
 const { Contract } = require("ethers");
 const { ethers } = require("hardhat");
 const BN = ethers.BigNumber
+const UniswapV2Pair = require("@uniswap/v2-core/build/UniswapV2Pair.json")
+const IERC20 = require("@uniswap/v2-core/build/IERC20.json")
 
 async function deployUniswap({deployer, WETH}) {
   const UniswapV2FactoryCompilerOutput =  require("@uniswap/v2-core/build/UniswapV2Factory.json")
@@ -20,6 +22,227 @@ async function deployUniswap({deployer, WETH}) {
 
   return {factory: uniswapFactory, router: uniswapRouter}
 }
+
+async function createPairWithPrice({signer, pairFactory, router, baseToken, otherToken, price, liquidityMagnitude=10e6}) {
+  price = BN.from(price);
+
+  const otherTokenDecimals = await otherToken.decimals()
+  const baseTokenDecimals = await baseToken.decimals()
+  
+  await pairFactory.createPair(otherToken.address, baseToken.address)
+
+  const tokenLPAmount = ethers.utils.parseUnits(liquidityMagnitude.toString(), otherTokenDecimals)
+  const baseLPAmount = ethers.utils.parseUnits(price.mul((liquidityMagnitude).toString()).toString(), baseTokenDecimals)
+  
+  await otherToken.mint(signer.address, tokenLPAmount)
+  await baseToken.mint(signer.address, baseLPAmount)
+
+  // Approve router to transfer liquidity tokens
+  await otherToken.connect(signer).approve(router.address, ethers.utils.parseUnits("10000000000000000", otherTokenDecimals))
+  await baseToken.connect(signer).approve(router.address, ethers.utils.parseUnits("1000000000000000", baseTokenDecimals))
+
+  // Add liquidity
+  await router.connect(signer).addLiquidity(
+    baseToken.address,
+    otherToken.address,
+    baseLPAmount,
+    tokenLPAmount,
+    baseLPAmount,
+    tokenLPAmount,
+    signer.address,
+    BN.from("10000000000000000000")
+  )
+}
+
+async function deployTokens({decimals=18, mintAccount=undefined, mintAmount=100_000, numberOfTokens=10}) {
+  const tokens = Promise.all([...new Array(numberOfTokens)].map(async (_, i) => {
+    const ERC20 = await ethers.getContractFactory('ERC20PresetMinterPauser')
+    const token = await ERC20.deploy(`Token ${i+1}`, `TOKEN${i+1}`)
+    if (mintAccount) {
+      await token.mint(mintAccount, ethers.utils.parseUnits(`${mintAmount}`, decimals))
+    }
+    return token
+  }))
+  return tokens
+}
+
+async function priceOf(pairAddress, tokenAddress, DECIMALS) {
+  const pair = new ethers.Contract(pairAddress, UniswapV2Pair.abi, ethers.provider)
+  const [token0, token1] = await Promise.all([await pair.token0(), await pair.token1()])
+  const otherTokenAddress = token0 == tokenAddress ? token1 : token0
+
+  let [res0, res1] = await pair.getReserves()
+
+  if (token0 != otherTokenAddress) {
+    const tmp = res0
+    res0 = res1
+    res1 = tmp
+  }
+
+  const [tokenDecimals, otherTokenDecimals] = await Promise.all([
+    await new ethers.Contract(tokenAddress, IERC20.abi, ethers.provider).decimals(),
+    await new ethers.Contract(otherTokenAddress, IERC20.abi, ethers.provider).decimals()
+  ])
+  res0 = res0.mul(BN.from("10").pow(tokenDecimals.toString()))
+  res1 = res1.mul(BN.from("10").pow((otherTokenDecimals-DECIMALS).toString()))
+
+  const price = res0.div(res1)
+  return price
+}
+
+describe("PriceFetcher tests", function () {
+  let deployer
+  let account1
+  let account2
+  let account3
+  let account4
+  let WETH
+  let priceFetcher
+  let baseToken
+  let pairFactory
+  let router
+
+  before(async () => {
+    [deployer, account1, account2, account3, account4] = await ethers.getSigners()
+    const ERC20 = await ethers.getContractFactory('ERC20PresetMinterPauser')
+    baseToken = await ERC20.deploy('Base Token', 'BASE')
+    const decimals = await baseToken.decimals()
+    await baseToken.mint(account1.address, ethers.utils.parseUnits("2000", decimals))
+
+    WETH = await ERC20.deploy('Wrapped Ether', 'WETH')
+
+    // Deploy uniswap pool
+    const {factory: _pairFactory, router: _router} = await deployUniswap({deployer, WETH})
+    pairFactory = _pairFactory
+    router = _router
+    const PriceFetcher = await ethers.getContractFactory('PriceFetcher')
+    priceFetcher = await PriceFetcher.deploy(pairFactory.address)
+    priceFetcher["quote"] = priceFetcher["quote(address,address)"]
+  })
+
+  it("Fetches prices for indirect pairs", async () => {
+    // token1/token2 token2/baseToken
+    const [token1, token2, token3, token4, token5] = await deployTokens({})
+    const prices = [
+      {
+        baseToken: token2,
+        otherToken: token1,
+        price: 5 
+      },
+      {
+        baseToken: token3,
+        otherToken: token2,
+        price: 10 
+      },
+      {
+        baseToken: token4,
+        otherToken: token2,
+        price: 10 
+      },
+      {
+        baseToken: token5,
+        otherToken: token4,
+        price: 10 
+      },
+      {
+        baseToken: baseToken,
+        otherToken: token5,
+        price: 15 
+      },
+      {
+        baseToken: baseToken,
+        otherToken: token3,
+        price: 15 
+      }
+    ]
+
+    await Promise.all(prices.map(async (price) => {
+      await createPairWithPrice({
+        signer: account2,
+        pairFactory,
+        router,
+        ...price
+      })
+    }))
+
+    const DECIMALS = await priceFetcher.DECIMALS()
+
+    Promise.all(
+      [
+        [baseToken.address, token5.address],  // 0 hops
+        [baseToken.address, token2.address],  // 2 hops
+        [baseToken.address, token1.address]   // 3 hops
+      ].map(async ([tokenInAddress, tokenOutAddress]) => {
+        const routes = await priceFetcher["computeAllRoutes(address,address)"](tokenInAddress, tokenOutAddress);
+        const routePrices = await Promise.all(routes.map(async (route) => {
+          let routePrice = BN.from("0")
+          expect(route[0].inToken).to.equal(tokenInAddress)
+          expect(route[route.length-1].outToken).to.equal(tokenOutAddress)
+          await Promise.all(route.map(async (path) => {
+            const {pair, inToken, price} = path
+            const calculatedPrice = (await priceOf(pair, inToken, DECIMALS))
+            expect(calculatedPrice).to.equal(price, "Calculated price == pair price")
+            if (routePrice == 0) {
+              routePrice = calculatedPrice;
+            } else {
+              routePrice *= calculatedPrice.div(BN.from(10**DECIMALS).toString());
+            }
+          })) 
+          return routePrice / 10**DECIMALS
+        }))
+
+        let [contractPrice] = await priceFetcher.quote(tokenOutAddress, tokenInAddress)
+        contractPrice = contractPrice / 10**DECIMALS
+        expect(contractPrice).to.equal(Math.max(...routePrices))
+      })
+    )
+  })
+
+  it('Should return a zero price for a token with no route', async () => {
+    const [token1, token2, token3, token4, token5, noLiqToken] = await deployTokens({})
+    const prices = [
+      {
+        baseToken: token2,
+        otherToken: token1,
+        price: 5 
+      },
+      {
+        baseToken: token3,
+        otherToken: token2,
+        price: 10 
+      },
+      {
+        baseToken: baseToken,
+        otherToken: token3,
+        price: 15 
+      },
+      {
+        baseToken: token4,
+        otherToken: token5,
+        price: 15 
+      },
+    ]
+
+    await Promise.all(prices.map(async (price) => {
+      await createPairWithPrice({
+        signer: account2,
+        pairFactory,
+        router,
+        ...price
+      })
+    }))
+
+    let [contractPrice, DECIMALS] = await priceFetcher.quote(baseToken.address, noLiqToken.address)
+    contractPrice = contractPrice / 10**DECIMALS
+    expect(contractPrice).to.equal(0)
+
+    [contractPrice, DECIMALS] = await priceFetcher.quote(baseToken.address, token4.address)
+    contractPrice = contractPrice / 10**DECIMALS
+    expect(contractPrice).to.equal(0)
+  })
+
+
+})
 
 describe("BalanceNFT Tests", function () {
   let deployer
@@ -71,34 +294,19 @@ describe("BalanceNFT Tests", function () {
     pairFactory = _pairFactory
 
     await Promise.all([token1, token2, token3, token4, token5].map(async (token, i) => {
-      await pairFactory.createPair(token.address, baseToken.address)
-
-      const price = BN.from(200 * (i+1))
-      const tokenLPAmount = ethers.utils.parseUnits(`${1_000_000}`, decimals)
-      const baseLPAmount = ethers.utils.parseUnits(price.mul("1000000").toString(), decimals+i)
-      
-      await token.mint(account2.address, tokenLPAmount)
-      await baseToken.mint(account2.address, baseLPAmount)
-
-      // Approve router to transfer liquidity tokens
-      await token.connect(account2).approve(router.address, ethers.utils.parseUnits("10000000000000000", decimals))
-      await baseToken.connect(account2).approve(router.address, ethers.utils.parseUnits("1000000000000000", decimals))
-
-      // Add liquidity
-      await router.connect(account2).addLiquidity(
-        baseToken.address,
-        token.address,
-        baseLPAmount,
-        tokenLPAmount,
-        baseLPAmount,
-        tokenLPAmount,
-        account2.address,
-        BN.from("10000000000000000000")
-      )
+      await createPairWithPrice({
+        signer: account2,
+        pairFactory,
+        router,
+        baseToken,
+        otherToken: token,
+        price: 200 * (i+1) 
+      })
     }))
     
     const PriceFetcher = await ethers.getContractFactory('PriceFetcher')
     priceFetcher = await PriceFetcher.deploy(pairFactory.address)
+    priceFetcher["quote"] = priceFetcher["quote(address,address)"]
 
     const PortfolioNFT = await ethers.getContractFactory('PortfolioNFT')
     portfolioNFT = await PortfolioNFT.deploy(baseToken.address)
@@ -147,8 +355,8 @@ describe("BalanceNFT Tests", function () {
       const balance = await token.connect(account1).balanceOf(account1.address)
       const symbol = await token.symbol()
       const decimals = await token.decimals() 
-      const price = await priceFetcher.quote(baseToken.address, token.address)
-      const value = price.mul(balance)
+      const [price, priceDecimals] = await priceFetcher.quote(baseToken.address, token.address)
+      const value = price.mul(balance).div((10**priceDecimals).toString())
       return {balance, address: token.address, symbol, decimals, price, value}
     }))
 
@@ -160,15 +368,14 @@ describe("BalanceNFT Tests", function () {
     const tokenURIDecoded = atob(tokenURI.split(",")[1])
     const decodedSvg = atob(JSON.parse(tokenURIDecoded).image.split(",")[1])
 
-    console.log(decodedSvg)
+    // console.log(decodedSvg)
+    console.log(JSON.parse(tokenURIDecoded).image)
 
     tokenDetails.sort((a, b) => b.value.sub(a.value)).splice(0, 4).map(({balance, symbol, decimals, value}) => {
       expect(decodedSvg).to.contain(symbol)
       expect(decodedSvg).to.contain(ethers.utils.commify(ethers.utils.formatUnits(balance, decimals)))
       expect(decodedSvg).to.contain(`$${ethers.utils.commify(ethers.utils.formatUnits(value, decimals)).replace(".0", "")}`) // TODO: Round bignumber instead of this
-    })
-
-    
+    })    
   })
 });
 
