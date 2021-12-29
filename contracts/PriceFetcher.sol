@@ -10,7 +10,7 @@ import "./libraries/CustomSort.sol";
 
 import "hardhat/console.sol";
 
-contract PriceFetcher is IPriceFetcher, Ownable {
+contract PriceFetcher is Ownable, IPriceFetcher {
 
     struct Counter {
         uint256 value;
@@ -37,7 +37,38 @@ contract PriceFetcher is IPriceFetcher, Ownable {
         pairFactory = IUniswapV2Factory(_pairFactoryAddress);
     }
 
-    function quote(address _baseTokenAddress, address _tokenAddress) public override view returns (uint256, uint256) {
+    function quote(address[] memory _path) public view override returns (uint256, uint256) {
+        if (_path.length == 0) {
+            return (0, DECIMALS);
+        }
+
+        if (_path[0] == _path[1]) {
+            return (1, DECIMALS);
+        }
+        
+        address currentTokenAddress = _path[0];
+        uint256 price = 0;
+        for (uint256 i = 1; i < _path.length; i++) {
+            address pairAddress = pairFactory.getPair(currentTokenAddress, _path[i]);
+            console.log(IERC20Metadata(currentTokenAddress).symbol(), IERC20Metadata(_path[i]).symbol());
+            require(pairAddress != address(0), "Invalid path");
+            
+            IUniswapV2Pair pair = IUniswapV2Pair(pairAddress);
+            uint256 pairPrice = quoteForPair(pair, currentTokenAddress);
+            
+            if (price == 0) {
+                price = pairPrice;
+            } else {
+                price *= pairPrice / uint256(10**DECIMALS);
+            }
+
+            currentTokenAddress = _path[i];
+            
+        }
+        return (price, DECIMALS);
+    }
+
+    function quoteAllRoutes(address _baseTokenAddress, address _tokenAddress) public view returns (uint256, uint256) {
         // https://ethereum.stackexchange.com/a/94173
         // TODO: Check multiple sources for greatest liquidity
         if (_baseTokenAddress == _tokenAddress) {
