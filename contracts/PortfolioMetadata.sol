@@ -80,7 +80,7 @@ contract PortfolioMetadata is IPortfolioMetadata {
     function tokenURI(uint256 tokenId) public override view returns (string memory) {
         uint256 entropyOffset = 0;
         
-        string memory output = '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 300 300">';
+        string memory output = '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" width="300" height="300" viewBox="0 0 300 300">';
         
         string[4] memory colors;
 
@@ -98,7 +98,7 @@ contract PortfolioMetadata is IPortfolioMetadata {
             generateGradient(colors[0], colors[1], 0), 
             generateGradient(colors[2], colors[3], 1),
             '<style>.base { font: bold 30px sans-serif; fill: white}.item { font: normal 24px sans-serif; fill: white}.sub { font: normal 14px sans-serif; fill: white}</style></defs>',
-            '<rect width="300" height="300" fill="#272727"/>'
+            '<rect width="100%" height="100%" fill="#272727"/>'
         ));
         
         PortfolioData memory portfolioData = getPortfolioData(tokenId);

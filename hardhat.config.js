@@ -23,12 +23,24 @@ task("get", "Gets token with ID", async ({tokenId}, {deployments, ethers}) => {
   console.log(tokenURI)
 }).addParam("tokenId", "ID of the token to get")
 
-task("mint", "Mints NFT", async (_, {deployments, ethers}) => {
+task("mint", "Mints NFT", async ({address}, {deployments, ethers}) => {
+  const deployment = await deployments.get("PortfolioNFT")
+  const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, ethers.provider)
+  const [account] = await ethers.getSigners()
+  const tokenId = await portfolioNFT.connect(account).mint(address)
+  console.log("Minted", tokenId)
+})
+.addParam("address", "Owner of NFT")
+
+task("mint-and-get", "Mints NFT", async (_, {deployments, ethers}) => {
   const deployment = await deployments.get("PortfolioNFT")
   const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, ethers.provider)
   const [account] = await ethers.getSigners()
   const tokenId = await portfolioNFT.connect(account).mint(account.address)
   console.log("Minted", tokenId)
+
+  const tokenURI = await portfolioNFT.tokenURI(1)
+  console.log(tokenURI)
 })
 
 task("quote", "Gets price for in token in terms of out token", async ({tokenIn, tokenOut}, {deployments, ethers}) => {

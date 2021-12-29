@@ -9,7 +9,7 @@ const func = async function (hre) {
 
   await deploy('PortfolioNFT', {
     from: deployer,
-    args: [BaseToken.address, WETH.address, "ETH", [WETH.address, BaseToken.address]],
+    args: ["Test Portfolio NFT", "TPNFT", BaseToken.address, WETH.address, "ETH", [WETH.address, BaseToken.address]],
     log: true,
   });
 };

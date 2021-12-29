@@ -28,7 +28,14 @@ contract PortfolioNFT is ERC721, Ownable {
 
     IPriceFetcher public priceFetcher;
 
-    constructor(address _baseTokenAddress, address _WETHAddress, string memory _WETHSymbol, address[] memory _WETHPricePath) ERC721("Lens Portfolio", "LENS") {
+    constructor(
+        string memory _name, 
+        string memory _symbol, 
+        address _baseTokenAddress, 
+        address _WETHAddress, 
+        string memory _WETHSymbol, 
+        address[] memory _WETHPricePath) 
+    ERC721(_name, _symbol) {
         // TODO: Track tokens on L2s
         // TODO: Track multiple addresses
         // TODO: Synthetic version
@@ -41,6 +48,7 @@ contract PortfolioNFT is ERC721, Ownable {
         setBaseTokenAddress(_baseTokenAddress);
         WETHAddress = _WETHAddress;
         WETHSymbol = _WETHSymbol;
+        WETHPricePath = _WETHPricePath;
 
         // TODO: Modifier that checks if priceFetcher is set for functions that require it
     }

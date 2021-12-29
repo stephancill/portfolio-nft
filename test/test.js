@@ -319,7 +319,7 @@ describe("BalanceNFT Tests", function () {
 
   beforeEach(async () => {
     const PortfolioNFT = await ethers.getContractFactory('PortfolioNFT')
-    portfolioNFT = await PortfolioNFT.deploy(baseToken.address, WETH.address, "ETH", [WETH.address, baseToken.address])
+    portfolioNFT = await PortfolioNFT.deploy("Test Portfolio NFT", "TPNFT", baseToken.address, WETH.address, "ETH", [WETH.address, baseToken.address])
 
     await portfolioNFT.setPriceFetcherAddress(priceFetcher.address)
 
