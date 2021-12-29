@@ -8,14 +8,21 @@ import MintSection from './components/MintSection';
 import NFTInfo from './components/NFTInfo';
 import PortfolioSetup from './components/PortfolioSetup';
 import { ethers } from 'ethers';
+import WalletInfo from './components/WalletInfo';
 
 function App() {
+const [walletConnected,setWalletConnected] = useState(false)
+const [walletAddress,setWalletAdd] = useState("")
+const [network,setNetwork] = useState()
+const [wrongNetwork,setWrongNetwork] = useState(false)
+const trackedAssets = [{symbol: "ETH", balance: 10.20},{symbol: "USDC", balance: 1000.20}]
 
 useEffect( async() => {
   const accounts = await window.ethereum.request({method: "eth_accounts"})
   if(accounts[0]){
     setWalletConnected(true)
     setWalletAdd(accounts[0])
+    getNetwork()
   }
   if (window.ethereum) {
     window.ethereum.on("accountsChanged", ([newAddress]) => {
@@ -23,6 +30,7 @@ useEffect( async() => {
       } else {
         setWalletAdd(newAddress)
         console.log(newAddress)
+        getNetwork()
       }
     })
     window.ethereum.on("chainChanged", ([networkId]) => {
@@ -30,10 +38,6 @@ useEffect( async() => {
     })
   }
 }, [])
-
-const [walletConnected,setWalletConnected] = useState(false)
-const [walletAdd,setWalletAdd] = useState("")
-const trackedAssets = [{symbol: "ETH", balance: 10.20},{symbol: "USDC", balance: 1000.20}]
 
 const connectWallet = async () => {
   if (window.ethereum) {
@@ -44,8 +48,28 @@ const connectWallet = async () => {
       let userAddresss = await signer.getAddress();
       setWalletAdd(userAddresss)
       setWalletConnected(true)
+
     }
   }
+}
+
+const getNetwork = async() => {
+  const provider = new ethers.providers.Web3Provider(window.ethereum)
+  const chainId = await provider.getNetwork()
+  const id = chainId.chainId
+  if (id!==1&&id!==137) {
+    alert("Please switch to Eth or Polygon network. ")
+    setWrongNetwork(true)
+  } else {
+    setWrongNetwork(false)
+    setNetwork(id)
+  }
+  console.log(id)
+}
+
+const updateNetwork = (childdata) => {
+  setNetwork(childdata);
+  console.log(childdata)
 }
 
   return (
@@ -54,9 +78,14 @@ const connectWallet = async () => {
         <div className="container">
           <Logo/>
           {walletConnected ? <>
-          <MintSection amountMinted={742} walletAdd={walletAdd}/> 
-          <div className="break"></div>
-          <PortfolioSetup trackedAssets={trackedAssets}/>
+            {wrongNetwork ? <>
+              <WalletInfo updateNetwork={updateNetwork}  walletAdd={walletAddress}/>
+              </>:<>
+              <WalletInfo updateNetwork={updateNetwork}  walletAdd={walletAddress}/>
+              <MintSection amountMinted={742} /> 
+              <div className="break"></div>
+              <PortfolioSetup trackedAssets={trackedAssets}/>
+            </>}
           </> : <>
           <ConnectWalletInfo amountMinted={742}/> 
           <ConnectWallet  onClick={connectWallet} />

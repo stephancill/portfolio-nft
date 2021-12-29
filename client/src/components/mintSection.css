@@ -11,3 +11,11 @@
   font-size: 14px;
   color: #a877c3;
 }
+.networkInput {
+  background: #ab78c5;
+  border: 1px solid #ab78c5;
+  border-radius: 5px;
+  height: 30px;
+
+  margin-bottom: 10px;
+}

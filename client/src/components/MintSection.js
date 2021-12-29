@@ -1,14 +1,9 @@
 import PercentageSold from "./PercentageSold"
 import "./mintSection.css"
 
-const MintSection = ({amountMinted,walletAdd}) => {
+const MintSection = ({amountMinted}) => {
   return (
     <div>
-      <div className="connectedAddress">
-        <div className="addText">
-        {walletAdd}
-        </div>
-      </div>
       <h2>Mint</h2>
       <h3 style={{marginTop:"10px"}}>The first 1000 Lens Portfolio NFTs can be minited for free. There on 0.1 ETH each.</h3>
       <PercentageSold amountMinted={amountMinted}/>
