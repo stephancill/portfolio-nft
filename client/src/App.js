@@ -34,7 +34,7 @@ useEffect( async() => {
       }
     })
     window.ethereum.on("chainChanged", ([networkId]) => {
-      //change chain
+      getNetwork()
     })
   }
 }, [])
@@ -48,7 +48,6 @@ const connectWallet = async () => {
       let userAddresss = await signer.getAddress();
       setWalletAdd(userAddresss)
       setWalletConnected(true)
-
     }
   }
 }
@@ -60,28 +59,29 @@ const getNetwork = async() => {
   if (id!==1&&id!==137) {
     alert("Please switch to Eth or Polygon network. ")
     setWrongNetwork(true)
+    console.log(id)
   } else {
     setWrongNetwork(false)
     setNetwork(id)
   }
-  console.log(id)
 }
 
 const updateNetwork = (childdata) => {
   setNetwork(childdata);
   console.log(childdata)
 }
+const walletInfo = <WalletInfo updateNetwork={updateNetwork}  walletAdd={walletAddress} wrongNetwork={wrongNetwork} network={network}/>
 
   return (
     <div className="App">
       <div className="App-header">
         <div className="container">
           <Logo/>
-          {walletConnected ? <>
+          {walletConnected ? <>  
             {wrongNetwork ? <>
-              <WalletInfo updateNetwork={updateNetwork}  walletAdd={walletAddress}/>
+              {walletInfo}
               </>:<>
-              <WalletInfo updateNetwork={updateNetwork}  walletAdd={walletAddress}/>
+              {walletInfo}
               <MintSection amountMinted={742} /> 
               <div className="break"></div>
               <PortfolioSetup trackedAssets={trackedAssets}/>
