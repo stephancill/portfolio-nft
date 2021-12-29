@@ -2,7 +2,8 @@ require("@nomiclabs/hardhat-waffle");
 require('hardhat-deploy');
 require("dotenv").config()
 
-const { TASK_COMPILE, TASK_NODE } = require("hardhat/builtin-tasks/task-names")
+const { TASK_COMPILE, TASK_NODE } = require("hardhat/builtin-tasks/task-names");
+const { task } = require("hardhat/config");
 const open = require('open')
 
 // This is a sample Hardhat task. To learn how to create your own go to
@@ -14,6 +15,13 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
     console.log(account.address);
   }
 });
+
+task("get", "Gets token with ID", async ({tokenId}, {deployments, ethers}) => {
+  const deployment = await deployments.get("PortfolioNFT")
+  const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, ethers.provider)
+  const tokenURI = await portfolioNFT.tokenURI(tokenId)
+  console.log(tokenURI)
+}).addParam("tokenId", "ID of the token to get")
 
 task("generate", "Outputs 10 random token SVGs", async (taskArgs, hre) => {
 
@@ -53,8 +61,12 @@ module.exports = {
   solidity: "0.8.4",
   networks: {
     ropsten: {
-      url: `https://ropsten.infura.io/v3/${process.env.ROPSTEN_PROJECT_ID}`,
-      accounts: [process.env.ROPSTEN_DEPLOYER]
+      url: `https://ropsten.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
+      accounts: [process.env.DEPLOYER]
+    },
+    rinkeby: {
+      url: `https://rinkeby.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
+      accounts: [process.env.DEPLOYER]
     }
   },
   namedAccounts: {

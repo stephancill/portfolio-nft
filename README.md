@@ -16,4 +16,4 @@ npx hardhat test
 
 ## Deployment
 ### Checklist
-- [] Use Flashbots RPC to avoid paying for failed transactions
+- [ ] Use Flashbots RPC to avoid paying for failed transactions
