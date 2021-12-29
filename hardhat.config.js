@@ -23,6 +23,15 @@ task("get", "Gets token with ID", async ({tokenId}, {deployments, ethers}) => {
   console.log(tokenURI)
 }).addParam("tokenId", "ID of the token to get")
 
+task("quote", "Gets price for in token in terms of out token", async ({tokenIn, tokenOut}, {deployments, ethers}) => {
+  const deployment = await deployments.get("PriceFetcher")
+  const priceFetcher = new ethers.Contract(deployment.address, deployment.abi, ethers.provider)
+  const [quote, decimals] = await priceFetcher.quote(tokenOut, tokenIn)
+  console.log(quote, decimals)
+})
+.addParam("tokenIn", "Address of token in")
+.addParam("tokenOut", "Address of token out")
+
 task("generate", "Outputs 10 random token SVGs", async (taskArgs, hre) => {
 
   await run(TASK_COMPILE)
@@ -67,6 +76,13 @@ module.exports = {
     rinkeby: {
       url: `https://rinkeby.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
       accounts: [process.env.DEPLOYER]
+    },
+    polygon: {
+      url: "https://polygon-rpc.com",
+      accounts: [process.env.DEPLOYER],
+      etherscan: {
+        apiKey: process.env.POLYGONSCAN_API_KEY
+      }
     }
   },
   namedAccounts: {
