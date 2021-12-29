@@ -23,6 +23,26 @@ task("get", "Gets token with ID", async ({tokenId}, {deployments, ethers}) => {
   console.log(tokenURI)
 }).addParam("tokenId", "ID of the token to get")
 
+task("mint", "Mints NFT", async ({address}, {deployments, ethers}) => {
+  const deployment = await deployments.get("PortfolioNFT")
+  const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, ethers.provider)
+  const [account] = await ethers.getSigners()
+  const tokenId = await portfolioNFT.connect(account).mint(address)
+  console.log("Minted", tokenId)
+})
+.addParam("address", "Owner of NFT")
+
+task("mint-and-get", "Mints NFT", async (_, {deployments, ethers}) => {
+  const deployment = await deployments.get("PortfolioNFT")
+  const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, ethers.provider)
+  const [account] = await ethers.getSigners()
+  const tokenId = await portfolioNFT.connect(account).mint(account.address)
+  console.log("Minted", tokenId)
+
+  const tokenURI = await portfolioNFT.tokenURI(1)
+  console.log(tokenURI)
+})
+
 task("quote", "Gets price for in token in terms of out token", async ({tokenIn, tokenOut}, {deployments, ethers}) => {
   const deployment = await deployments.get("PriceFetcher")
   const priceFetcher = new ethers.Contract(deployment.address, deployment.abi, ethers.provider)
@@ -63,19 +83,40 @@ task("generate", "Outputs 10 random token SVGs", async (taskArgs, hre) => {
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
 
+const hardhat = {
+  // your basic hardhat config
+}
+
+const external = {
+  deployments: {
+    
+  }
+}
+
+if (process.env.FORK) {
+  hardhat.forking = {
+    // your forking config
+    url: `https://polygon-mainnet.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
+    // blockNumber: 13900580
+  },
+  external.deployments.localhost = ['deployments/polygon']
+}
+
+
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
   solidity: "0.8.4",
   networks: {
+    hardhat,
     ropsten: {
       url: `https://ropsten.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
-      accounts: [process.env.DEPLOYER]
+      accounts: [process.env.DEPLOYER],
     },
     rinkeby: {
       url: `https://rinkeby.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
-      accounts: [process.env.DEPLOYER]
+      accounts: [process.env.DEPLOYER],
     },
     polygon: {
       url: "https://polygon-rpc.com",
@@ -83,12 +124,13 @@ module.exports = {
       etherscan: {
         apiKey: process.env.POLYGONSCAN_API_KEY
       }
-    }
+    },
   },
   namedAccounts: {
     deployer: 0
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY
-  }
+  },
+  external
 };

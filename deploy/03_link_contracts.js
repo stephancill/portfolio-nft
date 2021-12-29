@@ -13,7 +13,7 @@ const func = async function (hre) {
   await execute("PortfolioNFT", {from: deployer}, "setPortfolioMetadataAddress", PortfolioMetadata.address)
 };
 
-func.tags = ['PortfolioMetadata'];
+func.tags = ['Link'];
 func.dependencies = ['PortfolioNFT', 'PriceFetcher'];
 module.exports = func
 module.exports.runAtTheEnd = true;
