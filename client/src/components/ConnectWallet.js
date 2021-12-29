@@ -1,8 +1,8 @@
 
-const ConnectWallet = () => {
+const ConnectWallet = (props) => {
   return (
     <div style={{marginTop:"30px"}}>
-      <button>
+      <button onClick={props.onClick}>
         Connect Wallet
       </button>
     </div>

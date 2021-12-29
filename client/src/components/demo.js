@@ -43,11 +43,8 @@ const Demo = () => {
   window.onload = () => {
     setInterval(function(){
       populate()
-      console.log("s")
     }, 1000);
    }
-
-    
   
   var h1 = "{ font: bold 30px sans-serif; fill:white}"
   var h2 = "{ font: normal 24px sans-serif; fill:white}"
