@@ -36,6 +36,24 @@ task("mint", "Mints NFT", async ({address}, {deployments, ethers}) => {
 })
 .addParam("address", "Owner of NFT")
 
+task("track-token", "Gets route and tracks token for tokenId", async ({tokenId, tokenAddress}, {deployments, ethers}) => {
+  const PortfolioNFT = await deployments.get("PortfolioNFT")
+  const PriceFetcher = await deployments.get("PriceFetcher")
+  const portfolioNFT = new ethers.Contract(PortfolioNFT.address, PortfolioNFT.abi, ethers.provider)
+  const priceFetcher = new ethers.Contract(PriceFetcher.address, PriceFetcher.abi, ethers.provider)
+  const [account] = await ethers.getSigners()
+  
+  const {getPaths} = require("./tasks/portfolio-nft")
+  const baseTokenAddress = await portfolioNFT.baseTokenAddress()
+  const pairFactoryAddress = await priceFetcher.pairFactoryAddress()
+  console.log(tokenAddress, baseTokenAddress)
+  // TODO: Not finding paths
+  // const paths = await getPaths({tokenIn: tokenAddress, tokenOut: baseTokenAddress, pairFactoryAddress}) 
+  const tx = await portfolioNFT.connect(account).trackToken(tokenAddress, paths[0])
+})
+.addParam("tokenId", "Owner of NFT")
+.addParam("tokenAddress", "Owner of NFT")
+
 task("quote", "Gets price for in token in terms of out token", async ({tokenIn, tokenOut}, {deployments, ethers}) => {
   const deployment = await deployments.get("PriceFetcher")
   const priceFetcher = new ethers.Contract(deployment.address, deployment.abi, ethers.provider)
@@ -87,6 +105,7 @@ const external = {
 }
 
 if (process.env.FORK) {
+  hardhat.chainId = 137
   hardhat.forking = {
     // your forking config
     url: `https://polygon-mainnet.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,

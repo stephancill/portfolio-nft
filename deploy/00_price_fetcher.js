@@ -7,8 +7,6 @@ const func = async function (hre) {
 
   const {deployer} = await getNamedAccounts();
 
-  console.log(UniswapV2Factory.address)
-
   await deploy('PriceFetcher', {
     from: deployer,
     args: [UniswapV2Factory.address],

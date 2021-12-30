@@ -3,96 +3,7 @@ const { ethers } = require("hardhat");
 const BN = ethers.BigNumber
 const UniswapV2Pair = require("@uniswap/v2-core/build/UniswapV2Pair.json")
 const IERC20 = require("@uniswap/v2-core/build/IERC20.json")
-
-async function getPath({tokenIn, tokenOut, pairFactory, multicall, maxHops=5}) {
-  const ethersMulticall = require("ethers-multicall")
-  const poolCount = await pairFactory.allPairsLength()
-  const {chainId} = (await ethers.provider.getNetwork()).toString()
-  ethersMulticall.setMulticallAddress(chainId, multicall.address)
-
-  const multicallProvider = new ethersMulticall.Provider(ethers.provider, chainId)
-  const multicallPairFactory = new ethersMulticall.Contract(pairFactory.address, pairFactory.interface.fragments) //.format(ethers.utils.FormatTypes.json)
-  // console.log(multicallProvider)
-  const poolCalls = [...new Array(poolCount.toNumber())].map((_, i) => {
-    return multicallPairFactory.allPairs(i)
-  })
-
-  const poolAddresses = await multicallProvider.all(poolCalls)
-  const poolTokenAddresses = (await multicallProvider.all(
-    poolAddresses.map(poolAddress => {
-      const poolContract = new ethersMulticall.Contract(poolAddress, UniswapV2Pair.abi)
-      return [poolContract.token0(), poolContract.token1()]
-    }).flat()
-  ))
-
-  const poolTokenMapping = {}
-  poolTokenAddresses.forEach((tokenAddress, i) => {
-    const poolAddress = poolAddresses[Math.floor(i/2)]
-    if (!poolTokenMapping[poolAddress]) {
-      poolTokenMapping[poolAddress] = [tokenAddress]
-    } else {
-      poolTokenMapping[poolAddress].push(tokenAddress)
-    }
-  })
-
-  const involvesToken = (poolAddress, tokenAddress) => poolTokenMapping[poolAddress].includes(tokenAddress)
-
-  const poolsUsed = (new Array(poolAddresses.length)).fill(false);
-  const routes = []; // [(pool address, tokenIn, tokenOut)]
-
-  const computeRoutes = (
-    tokenIn,
-    tokenOut,
-    currentRoute,
-    poolsUsed,
-    _previousTokenOut
-  ) => {
-    if (currentRoute.length > maxHops) {
-      return;
-    }
-
-    if (
-      currentRoute.length > 0 &&
-      involvesToken(currentRoute[currentRoute.length - 1].poolAddress, tokenOut)
-    ) {
-      routes.push([...currentRoute]);
-      return;
-    }
-
-    for (let i = 0; i < poolAddresses.length; i++) {
-      if (poolsUsed[i]) {
-        continue;
-      }
-
-      const curPool = poolAddresses[i];
-      const previousTokenOut = _previousTokenOut ? _previousTokenOut : tokenIn;
-
-      if (!involvesToken(curPool, previousTokenOut)) {
-        continue;
-      }
-
-      const currentTokenOut = poolTokenMapping[curPool][0] === (previousTokenOut)
-        ? poolTokenMapping[curPool][1]
-        : poolTokenMapping[curPool][0];
-
-      currentRoute.push({poolAddress: curPool, tokenIn: previousTokenOut, tokenOut: currentTokenOut});
-      poolsUsed[i] = true;
-      computeRoutes(
-        tokenIn,
-        tokenOut,
-        currentRoute,
-        poolsUsed,
-        currentTokenOut
-      );
-      poolsUsed[i] = false;
-      currentRoute.pop();
-    }
-  };
-
-  computeRoutes(tokenIn, tokenOut, [], poolsUsed, undefined);
-
-  return routes
-}
+const { getPath, getPathsDetail } = require("./../tasks/portfolio-nft")
 
 async function deployUniswap({deployer, WETH}) {
   const UniswapV2FactoryCompilerOutput =  require("@uniswap/v2-core/build/UniswapV2Factory.json")
@@ -272,7 +183,12 @@ describe("PriceFetcher tests", function () {
         [baseToken.address, token2.address],  // 2 hops
         [baseToken.address, token1.address]   // 3 hops
       ].map(async ([tokenOutAddress, tokenInAddress]) => {
-        const paths = await getPath({pairFactory, multicall, tokenIn: tokenInAddress, tokenOut: tokenOutAddress})
+        const paths = await getPathsDetail({
+          pairFactoryAddress:pairFactory.address, 
+          multicallAddress:multicall.address, 
+          tokenIn: tokenInAddress, 
+          tokenOut: tokenOutAddress
+        })
         const path = paths[0]
         let routePrice = BN.from("0")
         expect(path[0].tokenIn).to.equal(tokenInAddress)
@@ -411,8 +327,6 @@ describe("BalanceNFT Tests", function () {
 
     const Multicall = await ethers.getContractFactory("Multicall")
     const multicall = await Multicall.deploy()
-
-    await getPath({tokenIn: WETH.address, tokenOut: baseToken.address, pairFactory, multicall})
     
     const PriceFetcher = await ethers.getContractFactory('PriceFetcher')
     priceFetcher = await PriceFetcher.deploy(pairFactory.address)
