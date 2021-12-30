@@ -4,6 +4,96 @@ const BN = ethers.BigNumber
 const UniswapV2Pair = require("@uniswap/v2-core/build/UniswapV2Pair.json")
 const IERC20 = require("@uniswap/v2-core/build/IERC20.json")
 
+async function getPath({tokenIn, tokenOut, pairFactory, multicall, maxHops=5}) {
+  const ethersMulticall = require("ethers-multicall")
+  const poolCount = await pairFactory.allPairsLength()
+  const {chainId} = (await ethers.provider.getNetwork()).toString()
+  ethersMulticall.setMulticallAddress(chainId, multicall.address)
+
+  const multicallProvider = new ethersMulticall.Provider(ethers.provider, chainId)
+  const multicallPairFactory = new ethersMulticall.Contract(pairFactory.address, pairFactory.interface.fragments) //.format(ethers.utils.FormatTypes.json)
+  // console.log(multicallProvider)
+  const poolCalls = [...new Array(poolCount.toNumber())].map((_, i) => {
+    return multicallPairFactory.allPairs(i)
+  })
+
+  const poolAddresses = await multicallProvider.all(poolCalls)
+  const poolTokenAddresses = (await multicallProvider.all(
+    poolAddresses.map(poolAddress => {
+      const poolContract = new ethersMulticall.Contract(poolAddress, UniswapV2Pair.abi)
+      return [poolContract.token0(), poolContract.token1()]
+    }).flat()
+  ))
+
+  const poolTokenMapping = {}
+  poolTokenAddresses.forEach((tokenAddress, i) => {
+    const poolAddress = poolAddresses[Math.floor(i/2)]
+    if (!poolTokenMapping[poolAddress]) {
+      poolTokenMapping[poolAddress] = [tokenAddress]
+    } else {
+      poolTokenMapping[poolAddress].push(tokenAddress)
+    }
+  })
+
+  const involvesToken = (poolAddress, tokenAddress) => poolTokenMapping[poolAddress].includes(tokenAddress)
+
+  const poolsUsed = (new Array(poolAddresses.length)).fill(false);
+  const routes = []; // [(pool address, tokenIn, tokenOut)]
+
+  const computeRoutes = (
+    tokenIn,
+    tokenOut,
+    currentRoute,
+    poolsUsed,
+    _previousTokenOut
+  ) => {
+    if (currentRoute.length > maxHops) {
+      return;
+    }
+
+    if (
+      currentRoute.length > 0 &&
+      involvesToken(currentRoute[currentRoute.length - 1].poolAddress, tokenOut)
+    ) {
+      routes.push([...currentRoute]);
+      return;
+    }
+
+    for (let i = 0; i < poolAddresses.length; i++) {
+      if (poolsUsed[i]) {
+        continue;
+      }
+
+      const curPool = poolAddresses[i];
+      const previousTokenOut = _previousTokenOut ? _previousTokenOut : tokenIn;
+
+      if (!involvesToken(curPool, previousTokenOut)) {
+        continue;
+      }
+
+      const currentTokenOut = poolTokenMapping[curPool][0] === (previousTokenOut)
+        ? poolTokenMapping[curPool][1]
+        : poolTokenMapping[curPool][0];
+
+      currentRoute.push({poolAddress: curPool, tokenIn: previousTokenOut, tokenOut: currentTokenOut});
+      poolsUsed[i] = true;
+      computeRoutes(
+        tokenIn,
+        tokenOut,
+        currentRoute,
+        poolsUsed,
+        currentTokenOut
+      );
+      poolsUsed[i] = false;
+      currentRoute.pop();
+    }
+  };
+
+  computeRoutes(tokenIn, tokenOut, [], poolsUsed, undefined);
+
+  return routes
+}
+
 async function deployUniswap({deployer, WETH}) {
   const UniswapV2FactoryCompilerOutput =  require("@uniswap/v2-core/build/UniswapV2Factory.json")
   const UniswapV2FactoryBytecode = UniswapV2FactoryCompilerOutput.bytecode
@@ -32,7 +122,7 @@ async function createPairWithPrice({signer, pairFactory, router, baseToken, othe
 
   const tokenLPAmount = ethers.utils.parseUnits(liquidityMagnitude.toString(), otherTokenDecimals)
   const baseLPAmount = ethers.utils.parseUnits(price.mul((liquidityMagnitude).toString()).toString(), baseTokenDecimals)
-  
+
   await otherToken.mint(signer.address, tokenLPAmount)
   await baseToken.mint(signer.address, baseLPAmount)
 
@@ -55,8 +145,7 @@ async function createPairWithPrice({signer, pairFactory, router, baseToken, othe
 
 async function deployTokens({decimals=18, mintAccount=undefined, mintAmount=100_000, numberOfTokens=10}) {
   const tokens = Promise.all([...new Array(numberOfTokens)].map(async (_, i) => {
-    const ERC20 = await ethers.getContractFactory('ERC20')
-    console.log(ERC20)
+    const ERC20 = await ethers.getContractFactory('ERC20PresetMinterPauser')
     const token = await ERC20.deploy(`Token ${i+1}`, `TOKEN${i+1}`)
     if (mintAccount) {
       await token.mint(mintAccount, ethers.utils.parseUnits(`${mintAmount}`, decimals))
@@ -90,159 +179,175 @@ async function priceOf(pairAddress, tokenAddress, DECIMALS) {
   return price
 }
 
-// describe("PriceFetcher tests", function () {
-//   let deployer
-//   let account1
-//   let account2
-//   let account3
-//   let account4
-//   let WETH
-//   let priceFetcher
-//   let baseToken
-//   let pairFactory
-//   let router
+describe("PriceFetcher tests", function () {
+  let deployer
+  let account1
+  let account2
+  let account3
+  let account4
+  let WETH
+  let priceFetcher
+  let baseToken
+  let pairFactory
+  let router
+  let multicall
 
-//   before(async () => {
-//     [deployer, account1, account2, account3, account4] = await ethers.getSigners()
-//     const ERC20 = await ethers.getContractFactory('ERC20PresetMinterPauser')
-//     baseToken = await ERC20.deploy('Base Token', 'BASE')
-//     const decimals = await baseToken.decimals()
-//     await baseToken.mint(account1.address, ethers.utils.parseUnits("2000", decimals))
+  before(async () => {
+    [deployer, account1, account2, account3, account4] = await ethers.getSigners()
+    const ERC20 = await ethers.getContractFactory('ERC20PresetMinterPauser')
+    baseToken = await ERC20.deploy('Base Token', 'BASE')
+    const decimals = await baseToken.decimals()
+    await baseToken.mint(account1.address, ethers.utils.parseUnits("2000", decimals))
 
-//     WETH = await ERC20.deploy('Wrapped Ether', 'WETH')
+    WETH = await ERC20.deploy('Wrapped Ether', 'WETH')
 
-//     // Deploy uniswap pool
-//     const {factory: _pairFactory, router: _router} = await deployUniswap({deployer, WETH})
-//     pairFactory = _pairFactory
-//     router = _router
-//     const PriceFetcher = await ethers.getContractFactory('PriceFetcher')
-//     priceFetcher = await PriceFetcher.deploy(pairFactory.address)
-//     priceFetcher["quote"] = priceFetcher["quote(address,address)"]
-//   })
+    // Deploy uniswap pool
+    const {factory: _pairFactory, router: _router} = await deployUniswap({deployer, WETH})
+    pairFactory = _pairFactory
+    router = _router
+    const PriceFetcher = await ethers.getContractFactory('PriceFetcher')
+    priceFetcher = await PriceFetcher.deploy(pairFactory.address)
+    priceFetcher["quote"] = priceFetcher["quote(address,address)"]
 
-//   it("Fetches prices for indirect pairs", async () => {
-//     // token1/token2 token2/baseToken
-//     const [token1, token2, token3, token4, token5] = await deployTokens({})
-//     const prices = [
-//       {
-//         baseToken: token2,
-//         otherToken: token1,
-//         price: 5 
-//       },
-//       {
-//         baseToken: token3,
-//         otherToken: token2,
-//         price: 10 
-//       },
-//       {
-//         baseToken: token4,
-//         otherToken: token2,
-//         price: 10 
-//       },
-//       {
-//         baseToken: token5,
-//         otherToken: token4,
-//         price: 10 
-//       },
-//       {
-//         baseToken: baseToken,
-//         otherToken: token5,
-//         price: 15 
-//       },
-//       {
-//         baseToken: baseToken,
-//         otherToken: token3,
-//         price: 15 
-//       }
-//     ]
+    const Multicall = await ethers.getContractFactory("Multicall")
+    multicall = await Multicall.deploy()
+  })
 
-//     await Promise.all(prices.map(async (price) => {
-//       await createPairWithPrice({
-//         signer: account2,
-//         pairFactory,
-//         router,
-//         ...price
-//       })
-//     }))
+  it("Fetches prices for indirect pairs", async () => {
+    // token1/token2 token2/baseToken
+    const [token1, token2, token3, token4, token5] = await deployTokens({})
+    const tokenToSymbolMapping = {}
+    Promise.all([token1, token2, token3, token4, token5, baseToken].map(async (token) => {
+      const symbol = await token.symbol()
+      tokenToSymbolMapping[token.address] = symbol
+    }))
+    
+    const prices = [
+      {
+        baseToken: token2,
+        otherToken: token1,
+        price: 3 
+      },
+      {
+        baseToken: token3,
+        otherToken: token2,
+        price: 5
+      },
+      {
+        baseToken: token4,
+        otherToken: token2,
+        price: 7 
+      },
+      {
+        baseToken: token5,
+        otherToken: token4,
+        price: 13 
+      },
+      {
+        baseToken: baseToken,
+        otherToken: token5,
+        price: 17 
+      },
+      {
+        baseToken: baseToken,
+        otherToken: token3,
+        price: 19 
+      }
+    ]
 
-//     const DECIMALS = await priceFetcher.DECIMALS()
+    await Promise.all(prices.map(async (price) => {
+      await createPairWithPrice({
+        signer: account2,
+        pairFactory,
+        router,
+        ...price
+      })
+    }))
 
-//     Promise.all(
-//       [
-//         [baseToken.address, token5.address],  // 0 hops
-//         [baseToken.address, token2.address],  // 2 hops
-//         [baseToken.address, token1.address]   // 3 hops
-//       ].map(async ([tokenInAddress, tokenOutAddress]) => {
-//         const routes = await priceFetcher["computeAllRoutes(address,address)"](tokenInAddress, tokenOutAddress);
-//         const routePrices = await Promise.all(routes.map(async (route) => {
-//           let routePrice = BN.from("0")
-//           expect(route[0].inToken).to.equal(tokenInAddress)
-//           expect(route[route.length-1].outToken).to.equal(tokenOutAddress)
-//           await Promise.all(route.map(async (path) => {
-//             const {pair, inToken, price} = path
-//             const calculatedPrice = (await priceOf(pair, inToken, DECIMALS))
-//             expect(calculatedPrice).to.equal(price, "Calculated price == pair price")
-//             if (routePrice == 0) {
-//               routePrice = calculatedPrice;
-//             } else {
-//               routePrice *= calculatedPrice.div(BN.from(10**DECIMALS).toString());
-//             }
-//           })) 
-//           return routePrice / 10**DECIMALS
-//         }))
+    const DECIMALS = await priceFetcher.DECIMALS()
 
-//         let [contractPrice] = await priceFetcher.quote(tokenOutAddress, tokenInAddress)
-//         contractPrice = contractPrice / 10**DECIMALS
-//         expect(contractPrice).to.equal(Math.max(...routePrices))
-//       })
-//     )
-//   })
+    Promise.all(
+      [
+        [baseToken.address, token5.address],  // 0 hops
+        [baseToken.address, token2.address],  // 2 hops
+        [baseToken.address, token1.address]   // 3 hops
+      ].map(async ([tokenOutAddress, tokenInAddress]) => {
+        const paths = await getPath({pairFactory, multicall, tokenIn: tokenInAddress, tokenOut: tokenOutAddress})
+        const path = paths[0]
+        let routePrice = BN.from("0")
+        expect(path[0].tokenIn).to.equal(tokenInAddress)
+        expect(path[path.length-1].tokenOut).to.equal(tokenOutAddress)
+        await Promise.all(path.map(async (path) => {
+          const {poolAddress, tokenIn, tokenOut} = path
+          const calculatedPrice = (await priceOf(poolAddress, tokenIn, DECIMALS))
+          if (routePrice == 0) {
+            routePrice = calculatedPrice;
+          } else {
+            routePrice *= calculatedPrice.div(BN.from(10**DECIMALS).toString());
+          }
+        })) 
+        routePrice = routePrice / 10**DECIMALS
 
-//   it('Should return a zero price for a token with no route', async () => {
-//     const [token1, token2, token3, token4, token5, noLiqToken] = await deployTokens({})
-//     const prices = [
-//       {
-//         baseToken: token2,
-//         otherToken: token1,
-//         price: 5 
-//       },
-//       {
-//         baseToken: token3,
-//         otherToken: token2,
-//         price: 10 
-//       },
-//       {
-//         baseToken: baseToken,
-//         otherToken: token3,
-//         price: 15 
-//       },
-//       {
-//         baseToken: token4,
-//         otherToken: token5,
-//         price: 15 
-//       },
-//     ]
+        const pathString = []
 
-//     await Promise.all(prices.map(async (price) => {
-//       await createPairWithPrice({
-//         signer: account2,
-//         pairFactory,
-//         router,
-//         ...price
-//       })
-//     }))
+        paths[0].forEach(p => {
+          if (!pathString.includes(p.tokenIn)) {
+            pathString.push(p.tokenIn)
+          }
+          if (!pathString.includes(p.tokenOut)) {
+            pathString.push(p.tokenOut)
+          }
+        })
 
-//     let [contractPrice, DECIMALS] = await priceFetcher.quote(baseToken.address, noLiqToken.address)
-//     contractPrice = contractPrice / 10**DECIMALS
-//     expect(contractPrice).to.equal(0)
+        
+        let [contractPrice] = await priceFetcher.quote(pathString)
+        contractPrice = contractPrice / 10**DECIMALS
+        
+        expect(contractPrice).to.equal(routePrice)
+      })
+    )
+  })
 
-//     [contractPrice, DECIMALS] = await priceFetcher.quote(baseToken.address, token4.address)
-//     contractPrice = contractPrice / 10**DECIMALS
-//     expect(contractPrice).to.equal(0)
-//   })
+  it('Should return a zero price for a token with no route', async () => {
+    const [token1, token2, token3, token4, token5, noLiqToken] = await deployTokens({})
+    const prices = [
+      {
+        baseToken: token2,
+        otherToken: token1,
+        price: 5 
+      },
+      {
+        baseToken: token3,
+        otherToken: token2,
+        price: 10 
+      },
+      {
+        baseToken: baseToken,
+        otherToken: token3,
+        price: 15 
+      },
+      {
+        baseToken: token4,
+        otherToken: token5,
+        price: 15 
+      },
+    ]
 
+    await Promise.all(prices.map(async (price) => {
+      await createPairWithPrice({
+        signer: account2,
+        pairFactory,
+        router,
+        ...price
+      })
+    }))
 
-// })
+    let [contractPrice, DECIMALS] = await priceFetcher.quote([])
+    contractPrice = contractPrice / 10**DECIMALS
+    expect(contractPrice).to.equal(0)
+  })
+
+})
 
 describe("BalanceNFT Tests", function () {
   let deployer
@@ -303,6 +408,11 @@ describe("BalanceNFT Tests", function () {
         price: 200 * (i+1) 
       })
     }))
+
+    const Multicall = await ethers.getContractFactory("Multicall")
+    const multicall = await Multicall.deploy()
+
+    await getPath({tokenIn: WETH.address, tokenOut: baseToken.address, pairFactory, multicall})
     
     const PriceFetcher = await ethers.getContractFactory('PriceFetcher')
     priceFetcher = await PriceFetcher.deploy(pairFactory.address)
@@ -454,7 +564,7 @@ describe("BalanceNFT Tests", function () {
     const decodedSvg = atob(JSON.parse(tokenURIDecoded).image.split(",")[1])
 
     // console.log(decodedSvg)
-    console.log(JSON.parse(tokenURIDecoded).image)
+    // console.log(JSON.parse(tokenURIDecoded).image)
 
     tokenDetails.sort((a, b) => b.value.sub(a.value)).splice(0, 4).map(({balance, symbol, decimals, value, address}) => {
       expect(decodedSvg).to.contain(symbol)

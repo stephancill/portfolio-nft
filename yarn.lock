@@ -3191,7 +3191,14 @@ ethereumjs-wallet@0.6.5:
     utf8 "^3.0.0"
     uuid "^3.3.2"
 
-ethers@^5.0.1, ethers@^5.0.2, ethers@^5.4.7, ethers@^5.5.2:
+ethers-multicall@^0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/ethers-multicall/-/ethers-multicall-0.2.1.tgz#0c01dc50f3b87c93be11e39bc8bc668bfa762b60"
+  integrity sha512-buSg3j75HhMnRiZ+hIXfJYA/MUZbhukE1oczeluM7O+4yWjhqI98ADcQ0bPr8EOpwtV4J3Eba47fkbx5GJpz5Q==
+  dependencies:
+    ethers "^5.0.0"
+
+ethers@^5.0.0, ethers@^5.0.1, ethers@^5.0.2, ethers@^5.4.7, ethers@^5.5.2:
   version "5.5.2"
   resolved "https://registry.yarnpkg.com/ethers/-/ethers-5.5.2.tgz#cd2e508c7342c44fa70392f722e8de8f2416489f"
   integrity sha512-EF5W+6Wwcu6BqVwpgmyR5U2+L4c1FQzlM/02dkZOugN3KF0cG9bzHZP+TDJglmPm2/IzCEJDT7KBxzayk7SAHw==
@@ -5392,6 +5399,10 @@ multibase@~0.6.0:
   dependencies:
     base-x "^3.0.8"
     buffer "^5.5.0"
+
+"multicall@https://github.com/makerdao/multicall":
+  version "0.0.0"
+  resolved "https://github.com/makerdao/multicall#1e1b44362640820bef92d0ccf5eeee25d9b41474"
 
 multicodec@^0.5.5:
   version "0.5.7"

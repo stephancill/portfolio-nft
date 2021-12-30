@@ -50,12 +50,14 @@ contract PriceFetcher is Ownable, IPriceFetcher {
         uint256 price = 0;
         for (uint256 i = 1; i < _path.length; i++) {
             address pairAddress = pairFactory.getPair(currentTokenAddress, _path[i]);
-            console.log(IERC20Metadata(currentTokenAddress).symbol(), IERC20Metadata(_path[i]).symbol());
+
+            // console.log(IERC20Metadata(currentTokenAddress).symbol(), IERC20Metadata(_path[i]).symbol());
+
             require(pairAddress != address(0), "Invalid path");
             
             IUniswapV2Pair pair = IUniswapV2Pair(pairAddress);
             uint256 pairPrice = quoteForPair(pair, currentTokenAddress);
-            
+
             if (price == 0) {
                 price = pairPrice;
             } else {
