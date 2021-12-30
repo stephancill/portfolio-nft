@@ -16,32 +16,25 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
   }
 });
 
-task("get", "Gets token with ID", async ({tokenId}, {deployments, ethers}) => {
+task("show", "Show token with ID", async ({tokenId}, {deployments, ethers}) => {
   const deployment = await deployments.get("PortfolioNFT")
   const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, ethers.provider)
   const tokenURI = await portfolioNFT.tokenURI(tokenId)
-  console.log(tokenURI)
+  const svg = JSON.parse(atob(tokenURI.split(",")[1])).image
+  const open = require("open")
+  await open(svg, {app: {name: "google chrome"}})
 }).addParam("tokenId", "ID of the token to get")
 
 task("mint", "Mints NFT", async ({address}, {deployments, ethers}) => {
   const deployment = await deployments.get("PortfolioNFT")
   const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, ethers.provider)
   const [account] = await ethers.getSigners()
-  const tokenId = await portfolioNFT.connect(account).mint(address)
-  console.log("Minted", tokenId)
+  const tx = await portfolioNFT.connect(account).mint(address)
+  const txInfo = await tx.wait()
+  const tokenId = txInfo.events[0].args.tokenId.toString()
+  console.log("Minted", {tokenId})
 })
 .addParam("address", "Owner of NFT")
-
-task("mint-and-get", "Mints NFT", async (_, {deployments, ethers}) => {
-  const deployment = await deployments.get("PortfolioNFT")
-  const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, ethers.provider)
-  const [account] = await ethers.getSigners()
-  const tokenId = await portfolioNFT.connect(account).mint(account.address)
-  console.log("Minted", tokenId)
-
-  const tokenURI = await portfolioNFT.tokenURI(1)
-  console.log(tokenURI)
-})
 
 task("quote", "Gets price for in token in terms of out token", async ({tokenIn, tokenOut}, {deployments, ethers}) => {
   const deployment = await deployments.get("PriceFetcher")
@@ -130,7 +123,11 @@ module.exports = {
     deployer: 0
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY
+    apiKey: {
+      rinkeby: process.env.ETHERSCAN_API_KEY,
+      ropsten: process.env.ETHERSCAN_API_KEY,
+      polygon: process.env.POLYGONSCAN_API_KEY,
+    }
   },
   external
 };

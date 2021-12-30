@@ -35,7 +35,10 @@ FORK=true npx hardhat task --network localhost
 ### Checklist
 - [ ] Use Flashbots RPC to avoid paying for failed transactions
 - [ ] Set WETH symbol in `deploy/00_portfolio_nft.js`
+- [ ] Set correct name and symbol in `deploy/00_portfolio_nft.js`
+- [ ] Remove `hardhat/console.sol` imports
 
 ```
 npx hardhat deploy --network <network>
+npx hardhat etherscan-verify --network <network>
 ```

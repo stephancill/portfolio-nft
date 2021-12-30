@@ -7,10 +7,11 @@ const func = async function (hre) {
 
   const {deployer} = await getNamedAccounts();
 
-  console.log("fuck you")
-
   await execute("PortfolioNFT", {from: deployer}, "setPriceFetcherAddress", PriceFetcher.address)
+  console.log("setPriceFetcherAddress", PriceFetcher.address)
+
   await execute("PortfolioNFT", {from: deployer}, "setPortfolioMetadataAddress", PortfolioMetadata.address)
+  console.log("setPortfolioMetadataAddress", PortfolioMetadata.address)
 };
 
 func.tags = ['Link'];
