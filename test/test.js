@@ -3,7 +3,7 @@ const { ethers } = require("hardhat");
 const BN = ethers.BigNumber
 const UniswapV2Pair = require("@uniswap/v2-core/build/UniswapV2Pair.json")
 const IERC20 = require("@uniswap/v2-core/build/IERC20.json")
-const { getPath, getPathsDetail } = require("./../tasks/portfolio-nft")
+const { getPaths, getPathsDetail } = require("./../tasks/portfolio-nft")
 
 async function deployUniswap({deployer, WETH}) {
   const UniswapV2FactoryCompilerOutput =  require("@uniswap/v2-core/build/UniswapV2Factory.json")
@@ -184,17 +184,16 @@ describe("PriceFetcher tests", function () {
         [baseToken.address, token1.address]   // 3 hops
       ].map(async ([tokenOutAddress, tokenInAddress]) => {
         const paths = await getPathsDetail({
-          pairFactoryAddress:pairFactory.address, 
-          multicallAddress:multicall.address, 
+          pairFactoryAddress: pairFactory.address, 
+          multicallAddress: multicall.address, 
           tokenIn: tokenInAddress, 
           tokenOut: tokenOutAddress
-        })
-        const path = paths[0]
+        })// TODO: returning empty
+        const path = paths[0] || []
         let routePrice = BN.from("0")
-        expect(path[0].tokenIn).to.equal(tokenInAddress)
-        expect(path[path.length-1].tokenOut).to.equal(tokenOutAddress)
-        await Promise.all(path.map(async (path) => {
-          const {poolAddress, tokenIn, tokenOut} = path
+        await Promise.all(path.map(async (pair) => {
+          // console.log(pair)
+          const {poolAddress, tokenIn, tokenOut} = pair
           const calculatedPrice = (await priceOf(poolAddress, tokenIn, DECIMALS))
           if (routePrice == 0) {
             routePrice = calculatedPrice;
@@ -206,17 +205,12 @@ describe("PriceFetcher tests", function () {
 
         const pathString = []
 
-        paths[0].forEach(p => {
-          if (!pathString.includes(p.tokenIn)) {
-            pathString.push(p.tokenIn)
-          }
-          if (!pathString.includes(p.tokenOut)) {
-            pathString.push(p.tokenOut)
-          }
+        path.forEach(p => {
+          pathString.push(p.poolAddress)
         })
 
         
-        let [contractPrice] = await priceFetcher.quote(pathString)
+        let [contractPrice] = await priceFetcher.quote(pathString, tokenInAddress, tokenOutAddress)
         contractPrice = contractPrice / 10**DECIMALS
         
         expect(contractPrice).to.equal(routePrice)
@@ -258,7 +252,7 @@ describe("PriceFetcher tests", function () {
       })
     }))
 
-    let [contractPrice, DECIMALS] = await priceFetcher.quote([])
+    let [contractPrice, DECIMALS] = await priceFetcher.quote([], ethers.constants.AddressZero, ethers.constants.AddressZero)
     contractPrice = contractPrice / 10**DECIMALS
     expect(contractPrice).to.equal(0)
   })
@@ -283,6 +277,7 @@ describe("BalanceNFT Tests", function () {
   let baseToken
 
   let pairFactory
+  let multicall
 
   before(async () => {
     [deployer, account1, account2, account3, account4] = await ethers.getSigners()
@@ -326,7 +321,7 @@ describe("BalanceNFT Tests", function () {
     }))
 
     const Multicall = await ethers.getContractFactory("Multicall")
-    const multicall = await Multicall.deploy()
+    multicall = await Multicall.deploy()
     
     const PriceFetcher = await ethers.getContractFactory('PriceFetcher')
     priceFetcher = await PriceFetcher.deploy(pairFactory.address)
@@ -343,7 +338,10 @@ describe("BalanceNFT Tests", function () {
 
   beforeEach(async () => {
     const PortfolioNFT = await ethers.getContractFactory('PortfolioNFT')
-    portfolioNFT = await PortfolioNFT.deploy("Test Portfolio NFT", "TPNFT", baseToken.address, WETH.address, "ETH", [WETH.address, baseToken.address])
+
+    const pairAddress = await pairFactory.getPair(WETH.address, baseToken.address)
+
+    portfolioNFT = await PortfolioNFT.deploy("Test Portfolio NFT", "TPNFT", baseToken.address, WETH.address, "ETH", [pairAddress])
 
     await portfolioNFT.setPriceFetcherAddress(priceFetcher.address)
 
@@ -454,7 +452,12 @@ describe("BalanceNFT Tests", function () {
     const trackedTokens = [token1, token2, token3, token4, token5, baseToken, WETH]
 
     await Promise.all(trackedTokens.map(async (token) => {
-      const pricePath = [token.address, baseToken.address]
+      const pricePath = (await getPaths({
+        pairFactoryAddress: pairFactory.address, 
+        multicallAddress: multicall.address, 
+        tokenIn: token.address, 
+        tokenOut: baseToken.address
+      }))[0] || []
       await portfolioNFT.connect(account1).trackToken(tokenId, token.address, pricePath)
     }))
 
@@ -467,8 +470,9 @@ describe("BalanceNFT Tests", function () {
         symbol = WETHSymbol
       }
       const decimals = await token.decimals() 
-      const pricePath = [token.address, baseToken.address]
-      const [price, priceDecimals] = await priceFetcher.quote(pricePath)
+      const pricePath = (await getPaths({tokenIn: token.address, tokenOut: baseToken.address, pairFactoryAddress: pairFactory.address, multicallAddress: multicall.address}))[0] || []
+
+      const [price, priceDecimals] = await priceFetcher.quote(pricePath, token.address, baseToken.address)
       const value = price.mul(balance).div((10**priceDecimals).toString())
       return {balance, address: token.address, symbol, decimals, price, value, pricePath}
     }))

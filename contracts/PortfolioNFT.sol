@@ -88,10 +88,7 @@ contract PortfolioNFT is ERC721, Ownable {
         IERC20Metadata(_tokenAddress).balanceOf(msg.sender);
 
         if (_pricePath.length > 0) {
-            require(_pricePath.length >= 2, "Path needs to contain at least 2 token addresses");
-            require(_pricePath[0] == _tokenAddress, "Path must start with tracked token address");
-            require(_pricePath[_pricePath.length-1] == baseTokenAddress, "Path must end with baseTokenAddress");
-            priceFetcher.quote(_pricePath);
+            priceFetcher.quote(_pricePath, _tokenAddress, baseTokenAddress);
         }
 
         tokenAddresses[_tokenId].add(_tokenAddress);

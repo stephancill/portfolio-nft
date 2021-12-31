@@ -48,8 +48,9 @@ task("track-token", "Gets route and tracks token for tokenId", async ({tokenId, 
   const pairFactoryAddress = await priceFetcher.pairFactoryAddress()
   console.log(tokenAddress, baseTokenAddress)
   // TODO: Not finding paths
-  // const paths = await getPaths({tokenIn: tokenAddress, tokenOut: baseTokenAddress, pairFactoryAddress}) 
-  const tx = await portfolioNFT.connect(account).trackToken(tokenAddress, paths[0])
+  const paths = await getPaths({tokenIn: tokenAddress, tokenOut: baseTokenAddress, pairFactoryAddress}) 
+  console.log(paths)
+  // const tx = await portfolioNFT.connect(account).trackToken(tokenAddress, paths[0])
 })
 .addParam("tokenId", "Owner of NFT")
 .addParam("tokenAddress", "Owner of NFT")
@@ -105,13 +106,16 @@ const external = {
 }
 
 if (process.env.FORK) {
-  hardhat.chainId = 137
+  hardhat.chainId = 1
   hardhat.forking = {
     // your forking config
-    url: `https://polygon-mainnet.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
+    // url: `https://polygon-mainnet.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
+    url: `https://mainnet.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
     // blockNumber: 13900580
   },
-  external.deployments.localhost = ['deployments/polygon']
+  // external.deployments.localhost = ['deployments/polygon']
+  external.deployments.localhost = ['deployments/mainnet']
+  
 }
 
 

@@ -37,25 +37,23 @@ contract PriceFetcher is Ownable, IPriceFetcher {
         pairFactory = IUniswapV2Factory(_pairFactoryAddress);
     }
 
-    function quote(address[] memory _path) public view override returns (uint256, uint256) {
+    function quote(address[] memory _path, address _tokenIn, address _tokenOut) public view override returns (uint256, uint256) {
         if (_path.length == 0) {
             return (0, DECIMALS);
         }
 
-        if (_path[0] == _path[1]) {
+        if (_tokenIn == _tokenOut) {
             return (1, DECIMALS);
         }
+
+        require(involvesToken(_tokenIn, IUniswapV2Pair(_path[0])), "First pool does not contain _tokenIn");
         
-        address currentTokenAddress = _path[0];
+        address currentTokenAddress = _tokenIn;
         uint256 price = 0;
-        for (uint256 i = 1; i < _path.length; i++) {
-            address pairAddress = pairFactory.getPair(currentTokenAddress, _path[i]);
-
+        for (uint256 i = 0; i < _path.length; i++) {
             // console.log(IERC20Metadata(currentTokenAddress).symbol(), IERC20Metadata(_path[i]).symbol());
-
-            require(pairAddress != address(0), "Invalid path");
             
-            IUniswapV2Pair pair = IUniswapV2Pair(pairAddress);
+            IUniswapV2Pair pair = IUniswapV2Pair(_path[i]);
             uint256 pairPrice = quoteForPair(pair, currentTokenAddress);
 
             if (price == 0) {
@@ -64,9 +62,10 @@ contract PriceFetcher is Ownable, IPriceFetcher {
                 price *= pairPrice / uint256(10**DECIMALS);
             }
 
-            currentTokenAddress = _path[i];
-            
+            currentTokenAddress = indexOfTokenInPair(currentTokenAddress, pair) == 0 ? pair.token1() : pair.token0();
         }
+        require(currentTokenAddress == _tokenOut, "Invalid path");
+        
         return (price, DECIMALS);
     }
 

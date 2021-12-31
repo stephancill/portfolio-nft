@@ -1,15 +1,16 @@
 const UniswapV2Pair = require("@uniswap/v2-core/build/UniswapV2Pair.json")
 
-async function getPathsDetail({tokenIn, tokenOut, pairFactoryAddress, multicallAddress, maxHops=5}) {
+async function getPathsDetail({tokenIn, tokenOut, pairFactoryAddress, multicallAddress, maxHops=2}) {
+  tokenIn = ethers.utils.getAddress(tokenIn)
+  tokenOut = ethers.utils.getAddress(tokenOut)
+  
   const ethersMulticall = require("ethers-multicall")
-  console.log(tokenIn, tokenOut, pairFactoryAddress, multicallAddress)
+
   const {abi:pairFactoryABI} = require("@uniswap/v2-core/build/UniswapV2Factory.json")
   const pairFactory = new ethers.Contract(pairFactoryAddress, pairFactoryABI, ethers.provider)
   
   const poolCount = await pairFactory.allPairsLength()
   const {chainId} = await ethers.provider.getNetwork()
-  const network = await ethers.provider.getNetwork()
-  console.log(network.chainId, chainId)
 
   if (multicallAddress) {
     ethersMulticall.setMulticallAddress(chainId, multicallAddress)
@@ -18,11 +19,26 @@ async function getPathsDetail({tokenIn, tokenOut, pairFactoryAddress, multicallA
   const multicallProvider = new ethersMulticall.Provider(ethers.provider, chainId)
   const multicallPairFactory = new ethersMulticall.Contract(pairFactoryAddress, pairFactoryABI) //.format(ethers.utils.FormatTypes.json)
 
+  const multicallBatchSize = 10
+  const executeMulticallInBatches = async (calls, batchSize) => {
+    return (await Promise.all(
+      [...new Array(Math.floor(poolCount.toNumber() / batchSize)+1)].map(async (_, i) => {
+        // console.log(i, multicallBatchSize*i, multicallBatchSize*(i+1))
+        const results = await multicallProvider.all(calls.slice(multicallBatchSize*i, multicallBatchSize*(i+1)))
+        return results
+      }).flat()
+    )).flat()
+  }
+
+  // console.log(poolCount.toNumber(), "pools")
   const poolCalls = [...new Array(poolCount.toNumber())].map((_, i) => {
     return multicallPairFactory.allPairs(i)
   })
 
-  const poolAddresses = await multicallProvider.all(poolCalls)
+  const poolAddresses = await executeMulticallInBatches(poolCalls, multicallBatchSize)
+
+  // console.log("done", poolAddresses)
+
   const poolTokenMapping = {}
   const token0Calls = poolAddresses.map(poolAddress => {
     const poolContract = new ethersMulticall.Contract(poolAddress, UniswapV2Pair.abi)
@@ -33,12 +49,16 @@ async function getPathsDetail({tokenIn, tokenOut, pairFactoryAddress, multicallA
     return poolContract.token1()
   })
 
-  const token0s = await multicallProvider.all(token0Calls)
+  const token0s = await executeMulticallInBatches(token0Calls, multicallBatchSize)
   token0s.forEach((address, i) => poolTokenMapping[poolAddresses[i]] = [address])
-  const token1s = await multicallProvider.all(token1Calls)
+  const token1s = await executeMulticallInBatches(token1Calls, multicallBatchSize)
   token1s.forEach((address, i) => poolTokenMapping[poolAddresses[i]].push(address))
 
-  console.log(poolTokenMapping[poolAddresses[12]])
+
+  // const fs = require("fs")
+  // const poolTokenMapping = JSON.parse(fs.readFileSync("test.json"))
+  // const poolAddresses = Object.keys(poolTokenMapping)
+  // fs.writeFileSync("test-mainnet.json", JSON.stringify(poolTokenMapping))
 
   const involvesToken = (poolAddress, tokenAddress) => poolTokenMapping[poolAddress].includes(tokenAddress)
 
@@ -61,7 +81,7 @@ async function getPathsDetail({tokenIn, tokenOut, pairFactoryAddress, multicallA
       involvesToken(currentRoute[currentRoute.length - 1].poolAddress, tokenOut)
     ) {
       routes.push([...currentRoute]);
-      console.log("route found")
+      // console.log("route found", [...currentRoute])
       return;
     }
 
@@ -82,8 +102,8 @@ async function getPathsDetail({tokenIn, tokenOut, pairFactoryAddress, multicallA
         : poolTokenMapping[curPool][0];
 
       currentRoute.push({poolAddress: curPool, tokenIn: previousTokenOut, tokenOut: currentTokenOut});
-      console.log({poolAddress: curPool, tokenIn: previousTokenOut, tokenOut: currentTokenOut})
       poolsUsed[i] = true;
+      // console.log(count++, currentTokenOut)
       computeRoutes(
         tokenIn,
         tokenOut,
@@ -105,20 +125,7 @@ async function getPathsDetail({tokenIn, tokenOut, pairFactoryAddress, multicallA
 async function getPaths(args) {
   const pathDetails = await getPathsDetail(args) 
 
-  const paths = []
-
-  pathDetails.map(r => {
-    const path = []
-    r.forEach(({tokenIn, tokenOut}) => {
-      if (!path.includes(tokenIn)) {
-        path.push(tokenIn)
-      }
-      if (!path.includes(tokenOut)) {
-        path.push(tokenOut)
-      }
-    })
-    paths.push(path)
-  })
+  const paths = pathDetails.map(path => path.map(pool => pool.poolAddress))
 
   return paths
 }
