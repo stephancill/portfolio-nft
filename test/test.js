@@ -110,14 +110,14 @@ describe("PriceFetcher tests", function () {
     const decimals = await baseToken.decimals()
     await baseToken.mint(account1.address, ethers.utils.parseUnits("2000", decimals))
 
-    WETH = await ERC20.deploy('Wrapped Ether', 'WETH')
+    WETH = await ERC20.deploy('Wrapped Test Ether', 'WTETH')
 
     // Deploy uniswap pool
     const {factory: _pairFactory, router: _router} = await deployUniswap({deployer, WETH})
     pairFactory = _pairFactory
     router = _router
     const PriceFetcher = await ethers.getContractFactory('PriceFetcher')
-    priceFetcher = await PriceFetcher.deploy(pairFactory.address)
+    priceFetcher = await PriceFetcher.deploy()
     priceFetcher["quote"] = priceFetcher["quote(address,address)"]
 
     const Multicall = await ethers.getContractFactory("Multicall")
@@ -303,7 +303,7 @@ describe("BalanceNFT Tests", function () {
     baseToken = await ERC20.deploy('Base Token', 'BASE')
     await baseToken.mint(account1.address, ethers.utils.parseUnits("2000", decimals))
 
-    WETH = await ERC20.deploy('Wrapped Ether', 'WETH')
+    WETH = await ERC20.deploy('Wrapped Test Ether', 'WTETH')
 
     // Deploy uniswap pool
     const {factory: _pairFactory, router} = await deployUniswap({deployer, WETH})
@@ -324,8 +324,8 @@ describe("BalanceNFT Tests", function () {
     multicall = await Multicall.deploy()
     
     const PriceFetcher = await ethers.getContractFactory('PriceFetcher')
-    priceFetcher = await PriceFetcher.deploy(pairFactory.address)
-    priceFetcher["quote"] = priceFetcher["quote(address,address)"]
+    priceFetcher = await PriceFetcher.deploy()
+    // priceFetcher["quote"] = priceFetcher["quote(address,address)"]
     // Gas estimate
     // let totalGas = BN.from("0")
     // const a = [priceFetcher, portfolioNFT, portfolioMetadata].map(contract => {
@@ -340,24 +340,18 @@ describe("BalanceNFT Tests", function () {
     const PortfolioNFT = await ethers.getContractFactory('PortfolioNFT')
 
     const pairAddress = await pairFactory.getPair(WETH.address, baseToken.address)
+    const WETHSymbol = (await WETH.symbol()).slice(1)
 
-    portfolioNFT = await PortfolioNFT.deploy("Test Portfolio NFT", "TPNFT", baseToken.address, WETH.address, "ETH", [pairAddress])
+    portfolioNFT = await PortfolioNFT.deploy("Test Portfolio NFT", "TPNFT")
 
     await portfolioNFT.setPriceFetcherAddress(priceFetcher.address)
+    await portfolioNFT.setBaseTokenAddress(baseToken.address)
+    await portfolioNFT.setWETH(WETH.address, WETHSymbol, [pairAddress])
 
     const PortfolioMetadata = await ethers.getContractFactory('PortfolioMetadata')
     portfolioMetadata = await PortfolioMetadata.deploy(portfolioNFT.address)
 
-    await portfolioNFT.setPortfolioMetadataAddress(portfolioMetadata.address);
-  })
-
-  it("Should deploy uniswap pairs", async function() {
-    const pairsLength = await pairFactory.allPairsLength()
-    expect(pairsLength).to.not.equal(0)
-    const pairAddress = await pairFactory.getPair(token1.address, baseToken.address)
-    expect(pairAddress.indexOf("0x0000000000000000")).to.equal(-1)
-    const pairAddressSwapped = await pairFactory.getPair(baseToken.address, token1.address)
-    expect(pairAddressSwapped.indexOf("0x0000000000000000")).to.equal(-1)
+    await portfolioNFT.setPortfolioMetadataAddress(portfolioMetadata.address)
   })
 
   it("Should mint tokens to address", async function () {
@@ -448,6 +442,9 @@ describe("BalanceNFT Tests", function () {
     const tokenId = 1
     
     const WETHSymbol = await portfolioNFT.WETHSymbol()
+    const actualWETHSymbol = await WETH.symbol()
+
+    expect(WETHSymbol).to.equal(actualWETHSymbol.slice(1))
 
     const trackedTokens = [token1, token2, token3, token4, token5, baseToken, WETH]
 
@@ -482,7 +479,7 @@ describe("BalanceNFT Tests", function () {
     const decodedSvg = atob(JSON.parse(tokenURIDecoded).image.split(",")[1])
 
     // console.log(decodedSvg)
-    // console.log(JSON.parse(tokenURIDecoded).image)
+    console.log(JSON.parse(tokenURIDecoded).image)
 
     tokenDetails.sort((a, b) => b.value.sub(a.value)).splice(0, 4).map(({balance, symbol, decimals, value, address}) => {
       expect(decodedSvg).to.contain(symbol)
