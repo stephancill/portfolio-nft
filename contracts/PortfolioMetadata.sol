@@ -64,8 +64,9 @@ contract PortfolioMetadata is IPortfolioMetadata {
 
             portfolioData.totalValue += value;
         }
-
-        CustomSort.sortByValue(valueByAddress, 0, int(valueByAddress.length - 1));
+        if (valueByAddress.length > 1) {
+            CustomSort.sortByValue(valueByAddress, 0, int(valueByAddress.length - 1));
+        }
 
         for (uint256 i = 0; i < tokenAddresses.length; i++) {
             uint256 value = valueByAddress[i].value;

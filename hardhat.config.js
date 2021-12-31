@@ -72,9 +72,10 @@ task("generate", "Outputs 10 random token SVGs", async (taskArgs, hre) => {
 
   const ERC20 = await ethers.getContractFactory('ERC20PresetMinterPauser')
   const baseToken = await ERC20.deploy('Base Token', 'BASE')
+  const WETH = await ERC20.deploy('Wrapped Ether', 'WETH')
 
   const PortfolioNFT = await ethers.getContractFactory('PortfolioNFT')
-  const portfolioNFT = await PortfolioNFT.deploy(baseToken.address)
+  const portfolioNFT = await PortfolioNFT.deploy("Portfolio NFT", "PNFT", baseToken.address, WETH.address, "WETH", [])
 
   const PortfolioMetadata = await ethers.getContractFactory('PortfolioMetadata')
   const portfolioMetadata = await PortfolioMetadata.deploy(portfolioNFT.address)
