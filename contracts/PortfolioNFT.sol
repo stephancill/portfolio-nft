@@ -15,6 +15,9 @@ contract PortfolioNFT is ERC721, Ownable {
     using Counters for Counters.Counter;
     using EnumerableSet for EnumerableSet.AddressSet;
 
+    event TrackToken(address tokenAddress, address[] pricePath);
+    event RemoveToken(address tokenAddress);
+
     Counters.Counter private _tokenIds;
     mapping (uint256 => EnumerableSet.AddressSet) tokenAddresses;
     mapping (uint256 => mapping(address => address[])) tokenPricePaths;
@@ -28,14 +31,7 @@ contract PortfolioNFT is ERC721, Ownable {
 
     IPriceFetcher public priceFetcher;
 
-    constructor(
-        string memory _name, 
-        string memory _symbol, 
-        address _baseTokenAddress, 
-        address _WETHAddress, 
-        string memory _WETHSymbol, 
-        address[] memory _WETHPricePath) 
-    ERC721(_name, _symbol) {
+    constructor(string memory _name, string memory _symbol) ERC721(_name, _symbol) {
         // TODO: Track tokens on L2s
         // TODO: Track multiple addresses
         // TODO: Synthetic version
@@ -43,17 +39,11 @@ contract PortfolioNFT is ERC721, Ownable {
         // TODO: Store wallet list on an L2 if possible - optimistic rollups use async messaging so won't be gasless nor instant
         // TODO: Pinned tokens
         // TODO: Indicate price changes
-        
-        // TODO: Store baseTokenAddress by tokenId and let owner choose
-        setBaseTokenAddress(_baseTokenAddress);
-        WETHAddress = _WETHAddress;
-        WETHSymbol = _WETHSymbol;
-        WETHPricePath = _WETHPricePath;
-
         // TODO: Modifier that checks if priceFetcher is set for functions that require it
     }
 
     function setBaseTokenAddress(address _baseTokenAddress) public onlyOwner {
+        // TODO: Store baseTokenAddress by tokenId and let owner choose
         baseTokenAddress = _baseTokenAddress;
     }
 
@@ -64,6 +54,15 @@ contract PortfolioNFT is ERC721, Ownable {
 
     function setPortfolioMetadataAddress(address _portfolioMetadataAddress) public onlyOwner {
         portfolioMetadataAddress = _portfolioMetadataAddress;
+    }
+
+    function setWETH(address _WETHAddress, string memory _WETHSymbol, address[] memory _WETHPricePath) public onlyOwner {
+        WETHAddress = _WETHAddress;
+        WETHSymbol = _WETHSymbol;
+        WETHPricePath = _WETHPricePath;
+
+        (uint256 price, ) = priceFetcher.quote(WETHPricePath, WETHAddress, baseTokenAddress);
+        require(price > 0, "WETH price path must be greater than 0");
     }
 
     function mint(address _address) public returns (uint256)
@@ -79,7 +78,6 @@ contract PortfolioNFT is ERC721, Ownable {
     }
 
     function trackToken(uint256 _tokenId, address _tokenAddress, address[] memory _pricePath) public {
-        // Require that user is token owner
         require(ownerOf(_tokenId) == msg.sender, "Not owner of address");
         
         // TODO: Use common default token list and register custom tokens
@@ -93,12 +91,16 @@ contract PortfolioNFT is ERC721, Ownable {
 
         tokenAddresses[_tokenId].add(_tokenAddress);
         tokenPricePaths[_tokenId][_tokenAddress] = _pricePath;
+
+        emit TrackToken(_tokenAddress, _pricePath);
     }
 
     function removeToken(uint256 _tokenId, address _tokenAddress) public {
-        // Require that user is token owner
         require(ownerOf(_tokenId) == msg.sender, "Not owner of address");
         tokenAddresses[_tokenId].remove(_tokenAddress);
+        tokenPricePaths[_tokenId][_tokenAddress] = new address[](0);
+
+        emit RemoveToken(_tokenAddress);
     }
 
     function trackTokens(uint256 _tokenId, address[] memory _tokenAddresses, address[][] memory _pricePaths) public {
