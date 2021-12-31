@@ -96,7 +96,7 @@ task("generate", "Outputs 10 random token SVGs", async (taskArgs, hre) => {
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
 
-const hardhat = {
+let hardhat = {
   // your basic hardhat config
 }
 
@@ -106,17 +106,28 @@ const external = {
   }
 }
 
-if (process.env.FORK) {
-  hardhat.chainId = 1
-  hardhat.forking = {
-    // your forking config
-    // url: `https://polygon-mainnet.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
-    url: `https://mainnet.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
-    // blockNumber: 13900580
+const hhNetworkOverrides = {
+  polygon: {
+    chainId: 31337,
+    forking: {
+      url: `https://polygon-mainnet.infura.io/v3/${process.env.INFURA_PROJECT_ID}`
+    }
   },
-  // external.deployments.localhost = ['deployments/polygon']
-  external.deployments.localhost = ['deployments/mainnet']
-  
+  mainnet: {
+    chainId: 31337,
+    forking: {
+      url: `https://mainnet.infura.io/v3/${process.env.INFURA_PROJECT_ID}`
+    }
+  }
+}
+
+// WARNING: WILL USE DEPLOYED CONTRACTS EVEN IF REDEPLOYED LOCALLY (e.g. PortfolioNFT won't update)
+if (process.env.FORK) {
+  hardhat = {
+    ...hardhat,
+    ...hhNetworkOverrides[process.env.FORK]
+  }
+  external.deployments.localhost = [`deployments/${process.env.FORK}`]
 }
 
 

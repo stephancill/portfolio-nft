@@ -24,10 +24,10 @@ npx hardhat deploy --export-all ./client/src/contracts.json
 npx hardhat test
 ```
 
-With mainnet forking:
+With external network forking:
 ```
-FORK=true npx hardhat node --network hardhat
-FORK=true npx hardhat task --network localhost
+FORK=polygon npx hardhat node --network hardhat
+FORK=polygon npx hardhat task --network localhost
 ```
 
 
