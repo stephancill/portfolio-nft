@@ -23,10 +23,12 @@ useEffect( async() => {
     setWalletConnected(true)
     setWalletAdd(accounts[0])
     getNetwork()
+    
   }
   if (window.ethereum) {
     window.ethereum.on("accountsChanged", ([newAddress]) => {
       if (newAddress === undefined) {
+        setWalletConnected(false)
       } else {
         setWalletAdd(newAddress)
         console.log(newAddress)
