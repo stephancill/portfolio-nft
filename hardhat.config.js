@@ -16,32 +16,44 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
   }
 });
 
-task("get", "Gets token with ID", async ({tokenId}, {deployments, ethers}) => {
+task("show", "Show token with ID", async ({tokenId}, {deployments, ethers}) => {
   const deployment = await deployments.get("PortfolioNFT")
   const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, ethers.provider)
   const tokenURI = await portfolioNFT.tokenURI(tokenId)
-  console.log(tokenURI)
+  const svg = JSON.parse(atob(tokenURI.split(",")[1])).image
+  const open = require("open")
+  await open(svg, {app: {name: "google chrome"}})
 }).addParam("tokenId", "ID of the token to get")
 
 task("mint", "Mints NFT", async ({address}, {deployments, ethers}) => {
   const deployment = await deployments.get("PortfolioNFT")
   const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, ethers.provider)
   const [account] = await ethers.getSigners()
-  const tokenId = await portfolioNFT.connect(account).mint(address)
-  console.log("Minted", tokenId)
+  const tx = await portfolioNFT.connect(account).mint(address)
+  const txInfo = await tx.wait()
+  const tokenId = txInfo.events[0].args.tokenId.toString()
+  console.log("Minted", {tokenId})
 })
 .addParam("address", "Owner of NFT")
 
-task("mint-and-get", "Mints NFT", async (_, {deployments, ethers}) => {
-  const deployment = await deployments.get("PortfolioNFT")
-  const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, ethers.provider)
+task("track-token", "Gets route and tracks token for tokenId", async ({tokenId, tokenAddress}, {deployments, ethers}) => {
+  const PortfolioNFT = await deployments.get("PortfolioNFT")
+  const PriceFetcher = await deployments.get("PriceFetcher")
+  const portfolioNFT = new ethers.Contract(PortfolioNFT.address, PortfolioNFT.abi, ethers.provider)
+  const priceFetcher = new ethers.Contract(PriceFetcher.address, PriceFetcher.abi, ethers.provider)
   const [account] = await ethers.getSigners()
-  const tokenId = await portfolioNFT.connect(account).mint(account.address)
-  console.log("Minted", tokenId)
-
-  const tokenURI = await portfolioNFT.tokenURI(1)
-  console.log(tokenURI)
+  
+  const {getPaths} = require("./tasks/portfolio-nft")
+  const baseTokenAddress = await portfolioNFT.baseTokenAddress()
+  const pairFactoryAddress = await priceFetcher.pairFactoryAddress()
+  console.log(tokenAddress, baseTokenAddress)
+  // TODO: Not finding paths
+  const paths = await getPaths({tokenIn: tokenAddress, tokenOut: baseTokenAddress, pairFactoryAddress}) 
+  console.log(paths)
+  // const tx = await portfolioNFT.connect(account).trackToken(tokenAddress, paths[0])
 })
+.addParam("tokenId", "Owner of NFT")
+.addParam("tokenAddress", "Owner of NFT")
 
 task("quote", "Gets price for in token in terms of out token", async ({tokenIn, tokenOut}, {deployments, ethers}) => {
   const deployment = await deployments.get("PriceFetcher")
@@ -60,9 +72,10 @@ task("generate", "Outputs 10 random token SVGs", async (taskArgs, hre) => {
 
   const ERC20 = await ethers.getContractFactory('ERC20PresetMinterPauser')
   const baseToken = await ERC20.deploy('Base Token', 'BASE')
+  const WETH = await ERC20.deploy('Wrapped Ether', 'WETH')
 
   const PortfolioNFT = await ethers.getContractFactory('PortfolioNFT')
-  const portfolioNFT = await PortfolioNFT.deploy(baseToken.address)
+  const portfolioNFT = await PortfolioNFT.deploy("Portfolio NFT", "PNFT", baseToken.address, WETH.address, "WETH", [])
 
   const PortfolioMetadata = await ethers.getContractFactory('PortfolioMetadata')
   const portfolioMetadata = await PortfolioMetadata.deploy(portfolioNFT.address)
@@ -83,7 +96,7 @@ task("generate", "Outputs 10 random token SVGs", async (taskArgs, hre) => {
 // You need to export an object to set up your config
 // Go to https://hardhat.org/config/ to learn more
 
-const hardhat = {
+let hardhat = {
   // your basic hardhat config
 }
 
@@ -93,13 +106,28 @@ const external = {
   }
 }
 
-if (process.env.FORK) {
-  hardhat.forking = {
-    // your forking config
-    url: `https://polygon-mainnet.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
-    // blockNumber: 13900580
+const hhNetworkOverrides = {
+  polygon: {
+    chainId: 31337,
+    forking: {
+      url: `https://polygon-mainnet.infura.io/v3/${process.env.INFURA_PROJECT_ID}`
+    }
   },
-  external.deployments.localhost = ['deployments/polygon']
+  mainnet: {
+    chainId: 31337,
+    forking: {
+      url: `https://mainnet.infura.io/v3/${process.env.INFURA_PROJECT_ID}`
+    }
+  }
+}
+
+// WARNING: WILL USE DEPLOYED CONTRACTS EVEN IF REDEPLOYED LOCALLY (e.g. PortfolioNFT won't update)
+if (process.env.FORK) {
+  hardhat = {
+    ...hardhat,
+    ...hhNetworkOverrides[process.env.FORK]
+  }
+  external.deployments.localhost = [`deployments/${process.env.FORK}`]
 }
 
 
@@ -130,7 +158,11 @@ module.exports = {
     deployer: 0
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY
+    apiKey: {
+      rinkeby: process.env.ETHERSCAN_API_KEY,
+      ropsten: process.env.ETHERSCAN_API_KEY,
+      polygon: process.env.POLYGONSCAN_API_KEY,
+    }
   },
   external
 };

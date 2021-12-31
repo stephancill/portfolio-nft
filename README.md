@@ -24,10 +24,10 @@ npx hardhat deploy --export-all ./client/src/contracts.json
 npx hardhat test
 ```
 
-With mainnet forking:
+With external network forking:
 ```
-FORK=true npx hardhat node --network hardhat
-FORK=true npx hardhat task --network localhost
+FORK=polygon npx hardhat node --network hardhat
+FORK=polygon npx hardhat task --network localhost
 ```
 
 
@@ -35,7 +35,10 @@ FORK=true npx hardhat task --network localhost
 ### Checklist
 - [ ] Use Flashbots RPC to avoid paying for failed transactions
 - [ ] Set WETH symbol in `deploy/00_portfolio_nft.js`
+- [ ] Set correct name and symbol in `deploy/00_portfolio_nft.js`
+- [ ] Remove `hardhat/console.sol` imports
 
 ```
 npx hardhat deploy --network <network>
+npx hardhat etherscan-verify --network <network>
 ```

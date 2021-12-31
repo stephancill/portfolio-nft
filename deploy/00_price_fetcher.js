@@ -2,16 +2,13 @@ const func = async function (hre) {
   const {deployments, getNamedAccounts} = hre;
   const {deploy} = deployments;
 
-  const UniswapV2Factory = await deployments.get("UniswapV2Factory")
   const CustomSort = await deployments.get("CustomSort")
 
   const {deployer} = await getNamedAccounts();
 
-  console.log(UniswapV2Factory.address)
-
   await deploy('PriceFetcher', {
     from: deployer,
-    args: [UniswapV2Factory.address],
+    args: [],
     log: true,
     libraries: {
       CustomSort: CustomSort.address

@@ -45,10 +45,13 @@ contract PortfolioMetadata is IPortfolioMetadata {
             if (_tokenAddress == address(0)) {
                 continue;
             } 
-            
+
             IERC20Metadata tokenContract = IERC20Metadata(_tokenAddress);
 
-            (uint256 price, uint256 priceDecimals) = portfolioTracker.priceFetcher().quote(_tokenPricePath);
+            (uint256 price, uint256 priceDecimals) = portfolioTracker.priceFetcher().quote(
+                _tokenPricePath, _tokenAddress, portfolioTracker.baseTokenAddress()
+            );
+
             uint256 balance = tokenContract.balanceOf(portfolioTracker.ownerOf(tokenId));
             if (_tokenAddress == portfolioTracker.WETHAddress()) { 
                 balance += portfolioTracker.ownerOf(tokenId).balance;
@@ -61,8 +64,9 @@ contract PortfolioMetadata is IPortfolioMetadata {
 
             portfolioData.totalValue += value;
         }
-
-        CustomSort.sortByValue(valueByAddress, 0, int(valueByAddress.length - 1));
+        if (valueByAddress.length > 1) {
+            CustomSort.sortByValue(valueByAddress, 0, int(valueByAddress.length - 1));
+        }
 
         for (uint256 i = 0; i < tokenAddresses.length; i++) {
             uint256 value = valueByAddress[i].value;
