@@ -34,7 +34,7 @@ FORK=polygon npx hardhat task --network localhost
 ## Deployment
 ### Checklist
 - [ ] Use Flashbots RPC to avoid paying for failed transactions
-- [ ] Set WETH symbol in `deploy/00_portfolio_nft.js`
+- [ ] Confirm WETH symbol in `deploy/00_portfolio_nft.js`
 - [ ] Set correct name and symbol in `deploy/00_portfolio_nft.js`
 - [ ] Remove `hardhat/console.sol` imports
 
