@@ -17,6 +17,23 @@ const [network,setNetwork] = useState()
 const [wrongNetwork,setWrongNetwork] = useState(false)
 const trackedAssets = [{symbol: "ETH", balance: 10.20},{symbol: "USDC", balance: 1000.20}]
 
+const networks = {
+  polygon: {
+    chainId: `0x${Number(137).toString(16)}`,
+    chainName: "Polygon Mainnet",
+    nativeCurrency: {
+      name: "MATIC",
+      symbol: "MATIC",
+      decimals: 18
+    },
+    rpcUrls: ["https://polygon-rpc.com/"],
+    blockExplorerUrls: ["https://polygonscan.com/"]
+  },
+  eth: {
+    chainId: `0x${Number(1).toString(16)}`
+  }
+};
+
 useEffect( async() => {
   const accounts = await window.ethereum.request({method: "eth_accounts"})
   if(accounts[0]){
@@ -67,11 +84,41 @@ const getNetwork = async() => {
     setNetwork(id)
   }
 }
-
-const updateNetwork = (childdata) => {
-  setNetwork(childdata);
+const updateNetwork = async (childdata) => {
   console.log(childdata)
-}
+  setNetwork(childdata);
+  await changeNetwork(childdata);
+};
+
+const changeNetwork = async (networkName ) => {
+  try {
+    if (!window.ethereum) throw new Error("No crypto wallet found");
+    console.log(networkName)
+    if (networkName==="1") {
+      
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [
+          {
+            ...networks["eth"]
+          }
+        ]
+      });
+    } else {
+      await window.ethereum.request({
+        method: "wallet_addEthereumChain",
+        params: [
+          {
+            ...networks["polygon"]
+          }
+        ]
+      });
+    }
+  } catch (err) {
+    getNetwork()
+  }
+};
+
 const walletInfo = <WalletInfo updateNetwork={updateNetwork}  walletAdd={walletAddress} wrongNetwork={wrongNetwork} network={network}/>
 
   return (
