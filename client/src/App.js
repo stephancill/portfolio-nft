@@ -115,8 +115,9 @@ const changeNetwork = async (networkName ) => {
       });
     }
   } catch (err) {
-    getNetwork()
+    
   }
+  getNetwork()
 };
 
 const walletInfo = <WalletInfo updateNetwork={updateNetwork}  walletAdd={walletAddress} wrongNetwork={wrongNetwork} network={network}/>
