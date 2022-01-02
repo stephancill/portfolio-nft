@@ -25,6 +25,14 @@ task("show", "Show token with ID", async ({tokenId}, {deployments, ethers}) => {
   await open(svg, {app: {name: "google chrome"}})
 }).addParam("tokenId", "ID of the token to get")
 
+task("transfer", "Transfer token to address", async ({tokenId, toAddress}, {deployments, ethers}) => {
+  const deployment = await deployments.get("PortfolioNFT")
+  const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, ethers.provider)
+  const [account] = await ethers.getSigners()
+  await portfolioNFT.connect(account).transferFrom(account.address, toAddress, tokenId)
+}).addParam("tokenId", "ID of the token to get")
+.addParam("toAddress", "Recipient address")
+
 task("mint", "Mints NFT", async ({address}, {deployments, ethers}) => {
   const deployment = await deployments.get("PortfolioNFT")
   const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, ethers.provider)
@@ -36,21 +44,35 @@ task("mint", "Mints NFT", async ({address}, {deployments, ethers}) => {
 })
 .addParam("address", "Owner of NFT")
 
-task("track-token", "Gets route and tracks token for tokenId", async ({tokenId, tokenAddress}, {deployments, ethers}) => {
+task("track-token", "Gets route and tracks token for tokenId", async ({tokenId, tokenAddress}, {deployments, ethers, getNamedAccounts}) => {
   const PortfolioNFT = await deployments.get("PortfolioNFT")
   const PriceFetcher = await deployments.get("PriceFetcher")
   const portfolioNFT = new ethers.Contract(PortfolioNFT.address, PortfolioNFT.abi, ethers.provider)
   const priceFetcher = new ethers.Contract(PriceFetcher.address, PriceFetcher.abi, ethers.provider)
   const [account] = await ethers.getSigners()
+  const {deployer} = await getNamedAccounts()
   
-  const {getPaths} = require("./tasks/portfolio-nft")
+  const {getPaths, getBestUniswapTrade, getBestSushiswapTrade} = require("./tasks/portfolio-nft")
   const baseTokenAddress = await portfolioNFT.baseTokenAddress()
-  const pairFactoryAddress = await priceFetcher.pairFactoryAddress()
-  console.log(tokenAddress, baseTokenAddress)
-  // TODO: Not finding paths
-  const paths = await getPaths({tokenIn: tokenAddress, tokenOut: baseTokenAddress, pairFactoryAddress}) 
-  console.log(paths)
-  // const tx = await portfolioNFT.connect(account).trackToken(tokenAddress, paths[0])
+  // const bestTrade = await getBestUniswapTrade({
+  //   tokenInAddress: tokenAddress, 
+  //   tokenOutAddress: baseTokenAddress,
+  //   maxHops: 3,
+  //   provider: ethers.provider,
+  // })
+  const bestTrade = await getBestSushiswapTrade({
+    tokenInAddress: tokenAddress, 
+    tokenOutAddress: baseTokenAddress,
+    maxHops: 3,
+    provider: ethers.provider,
+  })
+
+  console.log(bestTrade)
+
+  const tx = await portfolioNFT.connect(deployer).trackToken(tokenId, tokenAddress, bestTrade)
+  await tx.wait()
+
+  console.log("Done", tokenAddress, bestTrade)
 })
 .addParam("tokenId", "Owner of NFT")
 .addParam("tokenAddress", "Owner of NFT")
@@ -108,13 +130,13 @@ const external = {
 
 const hhNetworkOverrides = {
   polygon: {
-    chainId: 31337,
+    chainId: 137,
     forking: {
       url: `https://polygon-mainnet.infura.io/v3/${process.env.INFURA_PROJECT_ID}`
     }
   },
   mainnet: {
-    chainId: 31337,
+    chainId: 1,
     forking: {
       url: `https://mainnet.infura.io/v3/${process.env.INFURA_PROJECT_ID}`
     }

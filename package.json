@@ -14,12 +14,14 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.4.1",
+    "@sushiswap/core-sdk": "^1.0.0-canary.29",
     "@uniswap/smart-order-router": "^2.5.7",
     "@uniswap/v2-core": "^1.0.1",
     "@uniswap/v2-periphery": "^1.1.0-beta.0",
     "dotenv": "^10.0.0",
     "ethers-multicall": "^0.2.1",
     "multicall": "https://github.com/makerdao/multicall",
+    "node-fetch": "^2.6.1",
     "open": "^8.4.0"
   },
   "scripts": {

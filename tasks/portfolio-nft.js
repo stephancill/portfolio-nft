@@ -1,12 +1,147 @@
-const UniswapV2Pair = require("@uniswap/v2-core/build/UniswapV2Pair.json")
+const {abi:pairABI} = require("@uniswap/v2-core/build/UniswapV2Pair.json")
+const {abi:pairFactoryABI} = require("@uniswap/v2-core/build/UniswapV2Factory.json")
+const ERC20 = require("@uniswap/v2-core/build/IERC20.json")
+const { FACTORY_ADDRESS: UNI_FACTORY_ADDRESS, Trade: UniswapTrade, Pair: UniswapPair } = require('@uniswap/v2-sdk')
+const { FACTORY_ADDRESS: SUSHI_FACTORY_ADDRESS, Trade: SushiswapTrade, Pair: SushiswapPair, CurrencyAmount: SushiswapCurrencyAmount } = require('@sushiswap/core-sdk')
+const { CurrencyAmount: UniswapCurrencyAmount, Token, JSBI } = require("@uniswap/sdk-core")
+const fetch = require("node-fetch")
+const { ethers } = require("ethers")
+
+const tokenListToObject = (array) =>
+   array.reduce((obj, item) => {
+     obj[item.symbol] = new Token(item.chainId, item.address, item.decimals, item.symbol, item.name)
+     return obj
+   }, {})
+
+const executeMulticallInBatches = async (calls, batchSize, multicallProvider) => {
+  return (await Promise.all(
+    [...new Array(Math.floor(calls.length / batchSize)+1)].map(async (_, i) => {
+      // console.log(i, multicallBatchSize*i, multicallBatchSize*(i+1))
+      const results = await multicallProvider.all(calls.slice(batchSize*i, batchSize*(i+1)))
+      return results
+    }).flat()
+  )).flat()
+}
+
+async function getBestSushiswapTrade({tokenInAddress, tokenOutAddress, provider}) {
+  const {chainId} = await provider.getNetwork()
+  return await getBestTrade({
+    tokenInAddress, 
+    tokenOutAddress, 
+    provider, 
+    Pair: SushiswapPair, 
+    Trade: SushiswapTrade, 
+    CurrencyAmount: SushiswapCurrencyAmount,
+    FACTORY_ADDRESS: SUSHI_FACTORY_ADDRESS[chainId]
+  })
+}
+
+async function getBestUniswapTrade({tokenInAddress, tokenOutAddress, provider}) {
+  return await getBestTrade({
+    tokenInAddress, 
+    tokenOutAddress, 
+    provider, 
+    Pair: UniswapPair, 
+    Trade: UniswapTrade, 
+    CurrencyAmount: UniswapCurrencyAmount,
+    FACTORY_ADDRESS: 
+    UNI_FACTORY_ADDRESS})
+}
+
+
+async function getBestTrade({tokenInAddress, tokenOutAddress, provider, Pair, Trade, CurrencyAmount, FACTORY_ADDRESS}) {
+  const ethersMulticall = require("ethers-multicall")
+  const {chainId} = await provider.getNetwork()
+  const multicallProvider = new ethersMulticall.Provider(provider, chainId)
+  const multicallPairFactory = new ethersMulticall.Contract(FACTORY_ADDRESS, pairFactoryABI) //.format(ethers.utils.FormatTypes.json)
+
+  let tokens
+  await (async () => {
+    let _tokenListUri = 'https://gateway.ipfs.io/ipns/tokens.uniswap.org'
+    let tokenList = await fetch(_tokenListUri)
+    let tokenListJson = await tokenList.json()
+    let filteredTokens = tokenListJson.tokens.filter(function (t) {
+      return t.chainId === chainId
+    })
+    let _tokenList = [...filteredTokens]
+    tokens = Object.values(tokenListToObject(_tokenList))
+  })()
+
+
+  let makePairs = (arr) => arr.map( (v, i) => arr.slice(i + 1).map(w => [v,w]) ).flat();
+
+  const getToken = async (tokenAddress) => {
+    const token = new ethers.Contract(tokenAddress, ERC20.abi, provider)
+    const [symbol, decimals] = await Promise.all([token.symbol(), token.decimals()])
+    return new Token(chainId, tokenAddress, decimals, symbol)
+  }
+
+  const [tokenIn, tokenOut] = await Promise.all([getToken(tokenInAddress), getToken(tokenOutAddress)])
+
+  let baseTokens = tokens.filter(function (t) {
+    return ['DAI', 'USDC', 'USDT', 'FRAX', 'ETH'].includes(t.symbol)
+  }).map((el) => {
+    return el
+  }) 
+
+  let baseTokenByAddress = {}
+  baseTokens.forEach(t => {baseTokenByAddress[t.address] = t});
+
+  [tokenIn, tokenOut].forEach(t => {
+    if (!baseTokens.map(bt => bt.address).includes(t.address)) {
+      baseTokens.push(t)
+    }
+  })
+
+  let listOfPairwiseTokens = makePairs(baseTokens)
+  const tokensByPairAddress = {}
+
+  const getPairs = async (list) => {
+    let listOfPromises = list.map(item => {
+      const pairAddress = Pair.getAddress(item[0], item[1])
+      tokensByPairAddress[pairAddress] = item
+      return multicallPairFactory.getPair(item[0].address, item[1].address)
+    })
+    return multicallProvider.all(listOfPromises);
+  }
+
+  let listOfPairs = (await getPairs(listOfPairwiseTokens)).filter(addr => addr != ethers.constants.AddressZero)
+  const reserves = await multicallProvider.all(listOfPairs.map((pairAddress) => {
+    const multicallPair = new ethersMulticall.Contract(pairAddress, pairABI) //.format(ethers.utils.FormatTypes.json)
+    return multicallPair.getReserves() 
+  }))
+
+  const pairs = listOfPairs.map((pairAddress, i) => {
+    const [token0Amount, token1Amount] = reserves[i]
+    const [token0, token1] = tokensByPairAddress[pairAddress]
+    const amount1 = CurrencyAmount.fromRawAmount(token0, token0Amount)
+    const amount2 = CurrencyAmount.fromRawAmount(token1, token1Amount)
+    const pair = new Pair(amount1, amount2)
+    return pair
+  })
+
+  console.log(new CurrencyAmount.fromRawAmount(tokenIn, ethers.utils.parseUnits("1"), tokenIn.decimals),
+  tokenOut)
+
+  let bestTrade = Trade.bestTradeExactIn(
+    pairs,
+    new CurrencyAmount.fromRawAmount(tokenIn, ethers.utils.parseUnits("0.1"), tokenIn.decimals),
+    tokenOut,
+    {maxNumResults: 3, maxHops: 3}
+  )
+  
+  console.log(bestTrade)
+
+  bestTrade = bestTrade.length > 0 ? bestTrade[0] : null
+
+  return bestTrade.route.pairs.map(pair => pair.liquidityToken.address)
+}
 
 async function getPathsDetail({tokenIn, tokenOut, pairFactoryAddress, multicallAddress, maxHops=2}) {
   tokenIn = ethers.utils.getAddress(tokenIn)
   tokenOut = ethers.utils.getAddress(tokenOut)
   
   const ethersMulticall = require("ethers-multicall")
-
-  const {abi:pairFactoryABI} = require("@uniswap/v2-core/build/UniswapV2Factory.json")
   const pairFactory = new ethers.Contract(pairFactoryAddress, pairFactoryABI, ethers.provider)
   
   const poolCount = await pairFactory.allPairsLength()
@@ -20,22 +155,13 @@ async function getPathsDetail({tokenIn, tokenOut, pairFactoryAddress, multicallA
   const multicallPairFactory = new ethersMulticall.Contract(pairFactoryAddress, pairFactoryABI) //.format(ethers.utils.FormatTypes.json)
 
   const multicallBatchSize = 10
-  const executeMulticallInBatches = async (calls, batchSize) => {
-    return (await Promise.all(
-      [...new Array(Math.floor(poolCount.toNumber() / batchSize)+1)].map(async (_, i) => {
-        // console.log(i, multicallBatchSize*i, multicallBatchSize*(i+1))
-        const results = await multicallProvider.all(calls.slice(multicallBatchSize*i, multicallBatchSize*(i+1)))
-        return results
-      }).flat()
-    )).flat()
-  }
 
   // console.log(poolCount.toNumber(), "pools")
   const poolCalls = [...new Array(poolCount.toNumber())].map((_, i) => {
     return multicallPairFactory.allPairs(i)
   })
 
-  const poolAddresses = await executeMulticallInBatches(poolCalls, multicallBatchSize)
+  const poolAddresses = await executeMulticallInBatches(poolCalls, multicallBatchSize, multicallProvider)
 
   // console.log("done", poolAddresses)
 
@@ -49,9 +175,9 @@ async function getPathsDetail({tokenIn, tokenOut, pairFactoryAddress, multicallA
     return poolContract.token1()
   })
 
-  const token0s = await executeMulticallInBatches(token0Calls, multicallBatchSize)
+  const token0s = await executeMulticallInBatches(token0Calls, multicallBatchSize, multicallProvider)
   token0s.forEach((address, i) => poolTokenMapping[poolAddresses[i]] = [address])
-  const token1s = await executeMulticallInBatches(token1Calls, multicallBatchSize)
+  const token1s = await executeMulticallInBatches(token1Calls, multicallBatchSize, multicallProvider)
   token1s.forEach((address, i) => poolTokenMapping[poolAddresses[i]].push(address))
 
 
@@ -133,5 +259,7 @@ async function getPaths(args) {
 
 module.exports = {
   getPaths,
-  getPathsDetail
+  getPathsDetail,
+  getBestUniswapTrade,
+  getBestSushiswapTrade
 }
