@@ -25,6 +25,14 @@ task("show", "Show token with ID", async ({tokenId}, {deployments, ethers}) => {
   await open(svg, {app: {name: "google chrome"}})
 }).addParam("tokenId", "ID of the token to get")
 
+task("transfer", "Transfer token to address", async ({tokenId, toAddress}, {deployments, ethers}) => {
+  const deployment = await deployments.get("PortfolioNFT")
+  const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, ethers.provider)
+  const [account] = await ethers.getSigners()
+  await portfolioNFT.connect(account).transferFrom(account.address, toAddress, tokenId)
+}).addParam("tokenId", "ID of the token to get")
+.addParam("toAddress", "Recipient address")
+
 task("mint", "Mints NFT", async ({address}, {deployments, ethers}) => {
   const deployment = await deployments.get("PortfolioNFT")
   const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, ethers.provider)
@@ -36,12 +44,13 @@ task("mint", "Mints NFT", async ({address}, {deployments, ethers}) => {
 })
 .addParam("address", "Owner of NFT")
 
-task("track-token", "Gets route and tracks token for tokenId", async ({tokenId, tokenAddress}, {deployments, ethers}) => {
+task("track-token", "Gets route and tracks token for tokenId", async ({tokenId, tokenAddress}, {deployments, ethers, getNamedAccounts}) => {
   const PortfolioNFT = await deployments.get("PortfolioNFT")
   const PriceFetcher = await deployments.get("PriceFetcher")
   const portfolioNFT = new ethers.Contract(PortfolioNFT.address, PortfolioNFT.abi, ethers.provider)
   const priceFetcher = new ethers.Contract(PriceFetcher.address, PriceFetcher.abi, ethers.provider)
   const [account] = await ethers.getSigners()
+  const {deployer} = await getNamedAccounts()
   
   const {getPaths, getBestUniswapTrade, getBestSushiswapTrade} = require("./tasks/portfolio-nft")
   const baseTokenAddress = await portfolioNFT.baseTokenAddress()
@@ -58,9 +67,9 @@ task("track-token", "Gets route and tracks token for tokenId", async ({tokenId, 
     provider: ethers.provider,
   })
 
+  console.log(bestTrade)
 
-
-  const tx = await portfolioNFT.connect(account).trackToken(tokenId, tokenAddress, bestTrade)
+  const tx = await portfolioNFT.connect(deployer).trackToken(tokenId, tokenAddress, bestTrade)
   await tx.wait()
 
   console.log("Done", tokenAddress, bestTrade)

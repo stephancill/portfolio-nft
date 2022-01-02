@@ -2,8 +2,8 @@ const {abi:pairABI} = require("@uniswap/v2-core/build/UniswapV2Pair.json")
 const {abi:pairFactoryABI} = require("@uniswap/v2-core/build/UniswapV2Factory.json")
 const ERC20 = require("@uniswap/v2-core/build/IERC20.json")
 const { FACTORY_ADDRESS: UNI_FACTORY_ADDRESS, Trade: UniswapTrade, Pair: UniswapPair } = require('@uniswap/v2-sdk')
-const { FACTORY_ADDRESS: SUSHI_FACTORY_ADDRESS, Trade: SushiswapTrade, Pair: SushiswapPair } = require('@sushiswap/core-sdk')
-const { CurrencyAmount, Token } = require("@uniswap/sdk-core")
+const { FACTORY_ADDRESS: SUSHI_FACTORY_ADDRESS, Trade: SushiswapTrade, Pair: SushiswapPair, CurrencyAmount: SushiswapCurrencyAmount } = require('@sushiswap/core-sdk')
+const { CurrencyAmount: UniswapCurrencyAmount, Token, JSBI } = require("@uniswap/sdk-core")
 const fetch = require("node-fetch")
 const { ethers } = require("ethers")
 
@@ -31,8 +31,9 @@ async function getBestSushiswapTrade({tokenInAddress, tokenOutAddress, provider}
     provider, 
     Pair: SushiswapPair, 
     Trade: SushiswapTrade, 
-    FACTORY_ADDRESS: 
-    SUSHI_FACTORY_ADDRESS[chainId]})
+    CurrencyAmount: SushiswapCurrencyAmount,
+    FACTORY_ADDRESS: SUSHI_FACTORY_ADDRESS[chainId]
+  })
 }
 
 async function getBestUniswapTrade({tokenInAddress, tokenOutAddress, provider}) {
@@ -42,12 +43,13 @@ async function getBestUniswapTrade({tokenInAddress, tokenOutAddress, provider}) 
     provider, 
     Pair: UniswapPair, 
     Trade: UniswapTrade, 
+    CurrencyAmount: UniswapCurrencyAmount,
     FACTORY_ADDRESS: 
     UNI_FACTORY_ADDRESS})
 }
 
 
-async function getBestTrade({tokenInAddress, tokenOutAddress, provider, Pair, Trade, FACTORY_ADDRESS}) {
+async function getBestTrade({tokenInAddress, tokenOutAddress, provider, Pair, Trade, CurrencyAmount, FACTORY_ADDRESS}) {
   const ethersMulticall = require("ethers-multicall")
   const {chainId} = await provider.getNetwork()
   const multicallProvider = new ethersMulticall.Provider(provider, chainId)
@@ -112,25 +114,25 @@ async function getBestTrade({tokenInAddress, tokenOutAddress, provider, Pair, Tr
   const pairs = listOfPairs.map((pairAddress, i) => {
     const [token0Amount, token1Amount] = reserves[i]
     const [token0, token1] = tokensByPairAddress[pairAddress]
-    const pair = new Pair(
-      CurrencyAmount.fromRawAmount(token0, token0Amount.toString()),
-      CurrencyAmount.fromRawAmount(token1, token1Amount.toString()),
-    )
-    // console.log(pair)
+    const amount1 = CurrencyAmount.fromRawAmount(token0, token0Amount)
+    const amount2 = CurrencyAmount.fromRawAmount(token1, token1Amount)
+    const pair = new Pair(amount1, amount2)
     return pair
   })
 
-  console.log(pairs,
-    new CurrencyAmount.fromRawAmount(tokenIn, ethers.utils.parseUnits("1"), tokenIn.decimals),
-    tokenOut,
-    {maxNumResults: 1})
+  console.log(new CurrencyAmount.fromRawAmount(tokenIn, ethers.utils.parseUnits("1"), tokenIn.decimals),
+  tokenOut)
 
-  const bestTrade = Trade.bestTradeExactIn(
+  let bestTrade = Trade.bestTradeExactIn(
     pairs,
-    new CurrencyAmount.fromRawAmount(tokenIn, ethers.utils.parseUnits("1"), tokenIn.decimals),
+    new CurrencyAmount.fromRawAmount(tokenIn, ethers.utils.parseUnits("0.1"), tokenIn.decimals),
     tokenOut,
-    {maxNumResults: 1}
-  ).length > 0 ? bestTrade[0] : null
+    {maxNumResults: 3, maxHops: 3}
+  )
+  
+  console.log(bestTrade)
+
+  bestTrade = bestTrade.length > 0 ? bestTrade[0] : null
 
   return bestTrade.route.pairs.map(pair => pair.liquidityToken.address)
 }
