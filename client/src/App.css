@@ -68,8 +68,12 @@ h5 {
   font-size: 12px;
   font-weight: normal;
 }
-.textAccent {
-  background: linear-gradient(90deg, #e6c5d2 0%, #ca859f 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+
+.list-transition-enter {
+  opacity: 0;
+  transition: all 600ms;
+}
+/* This is where we can add the transition*/
+.list-transition-enter-active {
+  opacity: 1;
 }
