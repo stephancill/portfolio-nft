@@ -43,14 +43,27 @@ task("track-token", "Gets route and tracks token for tokenId", async ({tokenId, 
   const priceFetcher = new ethers.Contract(PriceFetcher.address, PriceFetcher.abi, ethers.provider)
   const [account] = await ethers.getSigners()
   
-  const {getPaths} = require("./tasks/portfolio-nft")
+  const {getPaths, getBestUniswapTrade, getBestSushiswapTrade} = require("./tasks/portfolio-nft")
   const baseTokenAddress = await portfolioNFT.baseTokenAddress()
-  const pairFactoryAddress = await priceFetcher.pairFactoryAddress()
-  console.log(tokenAddress, baseTokenAddress)
-  // TODO: Not finding paths
-  const paths = await getPaths({tokenIn: tokenAddress, tokenOut: baseTokenAddress, pairFactoryAddress}) 
-  console.log(paths)
-  // const tx = await portfolioNFT.connect(account).trackToken(tokenAddress, paths[0])
+  // const bestTrade = await getBestUniswapTrade({
+  //   tokenInAddress: tokenAddress, 
+  //   tokenOutAddress: baseTokenAddress,
+  //   maxHops: 3,
+  //   provider: ethers.provider,
+  // })
+  const bestTrade = await getBestSushiswapTrade({
+    tokenInAddress: tokenAddress, 
+    tokenOutAddress: baseTokenAddress,
+    maxHops: 3,
+    provider: ethers.provider,
+  })
+
+
+
+  const tx = await portfolioNFT.connect(account).trackToken(tokenId, tokenAddress, bestTrade)
+  await tx.wait()
+
+  console.log("Done", tokenAddress, bestTrade)
 })
 .addParam("tokenId", "Owner of NFT")
 .addParam("tokenAddress", "Owner of NFT")
@@ -108,13 +121,13 @@ const external = {
 
 const hhNetworkOverrides = {
   polygon: {
-    chainId: 31337,
+    chainId: 137,
     forking: {
       url: `https://polygon-mainnet.infura.io/v3/${process.env.INFURA_PROJECT_ID}`
     }
   },
   mainnet: {
-    chainId: 31337,
+    chainId: 1,
     forking: {
       url: `https://mainnet.infura.io/v3/${process.env.INFURA_PROJECT_ID}`
     }

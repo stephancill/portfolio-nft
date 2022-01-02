@@ -37,7 +37,8 @@ FORK=polygon npx hardhat task --network localhost
 - [ ] Confirm WETH symbol in `deploy/00_portfolio_nft.js`
 - [ ] Set correct name and symbol in `deploy/00_portfolio_nft.js`
 - [ ] Remove `hardhat/console.sol` imports
-
+- [ ] Verify contract on Etherscan
+- [ ] Verify contract on Sourcify
 ```
 npx hardhat deploy --network <network>
 npx hardhat etherscan-verify --network <network>
