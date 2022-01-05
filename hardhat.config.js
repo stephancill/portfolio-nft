@@ -5,6 +5,7 @@ require("dotenv").config()
 const { TASK_COMPILE, TASK_NODE } = require("hardhat/builtin-tasks/task-names");
 const { task } = require("hardhat/config");
 const open = require('open')
+const fetch = require("node-fetch")
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -47,32 +48,47 @@ task("mint", "Mints NFT", async ({address}, {deployments, ethers}) => {
 task("track-token", "Gets route and tracks token for tokenId", async ({tokenId, tokenAddress}, {deployments, ethers, getNamedAccounts}) => {
   const PortfolioNFT = await deployments.get("PortfolioNFT")
   const PriceFetcher = await deployments.get("PriceFetcher")
+  const PairFactory = await deployments.get("UniswapV2Factory")
   const portfolioNFT = new ethers.Contract(PortfolioNFT.address, PortfolioNFT.abi, ethers.provider)
   const priceFetcher = new ethers.Contract(PriceFetcher.address, PriceFetcher.abi, ethers.provider)
   const [account] = await ethers.getSigners()
   const {deployer} = await getNamedAccounts()
   
-  const {getPaths, getBestUniswapTrade, getBestSushiswapTrade} = require("./tasks/portfolio-nft")
+  const {getPaths} = require("./tasks/portfolio-nft")
   const baseTokenAddress = await portfolioNFT.baseTokenAddress()
-  // const bestTrade = await getBestUniswapTrade({
-  //   tokenInAddress: tokenAddress, 
-  //   tokenOutAddress: baseTokenAddress,
-  //   maxHops: 3,
-  //   provider: ethers.provider,
-  // })
-  const bestTrade = await getBestSushiswapTrade({
-    tokenInAddress: tokenAddress, 
-    tokenOutAddress: baseTokenAddress,
-    maxHops: 3,
-    provider: ethers.provider,
+
+
+  const {chainId} = await ethers.provider.getNetwork()
+
+  let tokens
+  await (async () => {
+    let _tokenListUri = 'https://gateway.ipfs.io/ipns/tokens.uniswap.org'
+    let tokenList = await fetch(_tokenListUri)
+    let tokenListJson = await tokenList.json()
+    let filteredTokens = tokenListJson.tokens.filter(function (t) {
+      return t.chainId === chainId
+    })
+    tokens = [...filteredTokens]
+  })()
+
+  let baseTokens = tokens.filter(function (t) {
+    return ['DAI', 'USDC', 'USDT', 'FRAX', 'ETH'].includes(t.symbol)
+  }).map((el) => {
+    return el.address
+  }) 
+
+  const paths = await getPaths({
+    tokenIn: tokenAddress, 
+    tokenOut: baseTokenAddress, 
+    baseTokens: baseTokens, 
+    pairFactoryAddress: PairFactory.address, 
+    provider: ethers.provider
   })
 
-  console.log(bestTrade)
-
-  const tx = await portfolioNFT.connect(deployer).trackToken(tokenId, tokenAddress, bestTrade)
+  const tx = await portfolioNFT.connect(account).trackToken(tokenId, tokenAddress, paths[0])
   await tx.wait()
 
-  console.log("Done", tokenAddress, bestTrade)
+  console.log("Done", tokenAddress, paths[0])
 })
 .addParam("tokenId", "Owner of NFT")
 .addParam("tokenAddress", "Owner of NFT")

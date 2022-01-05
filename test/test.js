@@ -186,8 +186,10 @@ describe("PriceFetcher tests", function () {
         const paths = await getPathsDetail({
           pairFactoryAddress: pairFactory.address, 
           multicallAddress: multicall.address, 
+          baseTokens: Object.keys(tokenToSymbolMapping),
           tokenIn: tokenInAddress, 
-          tokenOut: tokenOutAddress
+          tokenOut: tokenOutAddress,
+          provider: ethers.provider
         })// TODO: returning empty
         const path = paths[0] || []
         let routePrice = BN.from("0")
@@ -447,13 +449,16 @@ describe("BalanceNFT Tests", function () {
     expect(WETHSymbol).to.equal(actualWETHSymbol.slice(1))
 
     const trackedTokens = [token1, token2, token3, token4, token5, baseToken, WETH]
+    const tokenAddresses = trackedTokens.map(t => t.address)
 
     await Promise.all(trackedTokens.map(async (token) => {
       const pricePath = (await getPaths({
         pairFactoryAddress: pairFactory.address, 
         multicallAddress: multicall.address, 
         tokenIn: token.address, 
-        tokenOut: baseToken.address
+        baseTokens: tokenAddresses,
+        tokenOut: baseToken.address,
+        provider: ethers.provider
       }))[0] || []
       await portfolioNFT.connect(account1).trackToken(tokenId, token.address, pricePath)
     }))
@@ -467,7 +472,14 @@ describe("BalanceNFT Tests", function () {
         symbol = WETHSymbol
       }
       const decimals = await token.decimals() 
-      const pricePath = (await getPaths({tokenIn: token.address, tokenOut: baseToken.address, pairFactoryAddress: pairFactory.address, multicallAddress: multicall.address}))[0] || []
+      const pricePath = (await getPaths({
+        tokenIn: token.address, 
+        tokenOut: baseToken.address, 
+        baseTokens: [baseToken.address], 
+        pairFactoryAddress: pairFactory.address, 
+        multicallAddress: multicall.address,
+        provider: ethers.provider
+      }))[0] || []
 
       const [price, priceDecimals] = await priceFetcher.quote(pricePath, token.address, baseToken.address)
       const value = price.mul(balance).div((10**priceDecimals).toString())
