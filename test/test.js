@@ -190,7 +190,7 @@ describe("PriceFetcher tests", function () {
           tokenIn: tokenInAddress, 
           tokenOut: tokenOutAddress,
           provider: ethers.provider
-        })// TODO: returning empty
+        })
         const path = paths[0] || []
         let routePrice = BN.from("0")
         await Promise.all(path.map(async (pair) => {
@@ -373,7 +373,6 @@ describe("BalanceNFT Tests", function () {
     const tokenId = 1
     const trackedTokensBefore = await portfolioNFT.getTokenAddresses(tokenId)
 
-    // TODO: Test path checks
     await portfolioNFT.connect(account1).trackToken(tokenId, token1.address, [])
     const trackedTokensAfter = await portfolioNFT.getTokenAddresses(tokenId)
 
@@ -503,5 +502,4 @@ describe("BalanceNFT Tests", function () {
   })
 });
 
-// TODO: Test PriceFetcher
 // TODO: Test OStrings.toStringCommaFormat

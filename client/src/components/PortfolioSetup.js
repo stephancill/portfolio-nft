@@ -5,7 +5,7 @@ import {IoIosArrowDropleftCircle,IoIosRemoveCircle} from 'react-icons/io'
 import PortfolioUserTokensList from './PortfolioUserTokensList';
 import PortfolioAddTokens from './PortfolioAddTokens';
 
-const PortfolioSetup = ({trackedAssets}) => {
+const PortfolioSetup = ({trackedAssets,walletConnected}) => {
   const [addingToken,setAddingToken] = useState(false)
 
   const back = () => {
@@ -33,7 +33,7 @@ const PortfolioSetup = ({trackedAssets}) => {
             </button>
           </div>
         </div>
-        <PortfolioAddTokens/>
+        <PortfolioAddTokens walletConnected={walletConnected}/>
       </>}
     </div>
     

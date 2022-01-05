@@ -9,13 +9,17 @@ import NFTInfo from './components/NFTInfo';
 import PortfolioSetup from './components/PortfolioSetup';
 import { ethers } from 'ethers';
 import WalletInfo from './components/WalletInfo';
+import {  CSSTransition  } from 'react-transition-group'
 
 function App() {
 const [walletConnected,setWalletConnected] = useState(false)
 const [walletAddress,setWalletAdd] = useState("")
 const [network,setNetwork] = useState()
 const [wrongNetwork,setWrongNetwork] = useState(false)
+const [loaded,setLoaded] = useState(false)
+
 const trackedAssets = [{symbol: "ETH", balance: 10.20},{symbol: "USDC", balance: 1000.20}]
+
 
 const networks = {
   polygon: {
@@ -34,13 +38,16 @@ const networks = {
   }
 };
 
+window.onload = () => {
+  setLoaded(!loaded)
+ }
+
 useEffect( async() => {
   const accounts = await window.ethereum.request({method: "eth_accounts"})
   if(accounts[0]){
     setWalletConnected(true)
     setWalletAdd(accounts[0])
     getNetwork()
-    
   }
   if (window.ethereum) {
     window.ethereum.on("accountsChanged", ([newAddress]) => {
@@ -120,29 +127,38 @@ const changeNetwork = async (networkName ) => {
   getNetwork()
 };
 
+
 const walletInfo = <WalletInfo updateNetwork={updateNetwork}  walletAdd={walletAddress} wrongNetwork={wrongNetwork} network={network}/>
 
   return (
     <div className="App">
       <div className="App-header">
         <div className="container">
-          <Logo/>
-          {walletConnected ? <>  
-            {wrongNetwork ? <>
-              {walletInfo}
-              </>:<>
-              {walletInfo}
-              <MintSection amountMinted={742} /> 
-              <div className="break"></div>
-              <PortfolioSetup trackedAssets={trackedAssets}/>
-            </>}
-          </> : <>
-          <ConnectWalletInfo amountMinted={742}/> 
-          <ConnectWallet  onClick={connectWallet} />
-          <div className="break"></div>
-          <Demo/>
-          <NFTInfo/> 
-          </>}
+          <CSSTransition
+            in={loaded}
+            timeout={400}
+            classNames="list-transition"
+            unmountOnExit
+            appear
+          >
+            <div><Logo/>
+            {walletConnected ? <>  
+              {wrongNetwork ? <>
+                {walletInfo}
+                </>:<>
+                {walletInfo}
+                <MintSection amountMinted={742} /> 
+                <div className="break"></div>
+                <PortfolioSetup trackedAssets={trackedAssets} walletConnected={walletConnected}/>
+              </>}
+            </> : <>
+            <ConnectWalletInfo amountMinted={742}/> 
+            <ConnectWallet  onClick={connectWallet} />
+            <div className="break"></div>
+            <Demo/>
+            <NFTInfo/> 
+            </>}</div>
+          </CSSTransition>
         </div>
       </div>
     </div>

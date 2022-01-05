@@ -1,8 +1,24 @@
-import React from 'react'
-import {IoIosArrowDropleftCircle,IoIosRemoveCircle} from 'react-icons/io'
+import {useEffect} from 'react'
 import "./portfolioSetup.css"
 
-const PortfolioAddTokens = () => {
+const PortfolioAddTokens = ({walletConnected}) => {
+
+  useEffect(async()=>{
+    if (walletConnected) {
+      getTokenList()
+    }
+  },[walletConnected])
+
+  const getTokenList = async () => {
+    console.log( await getJSON("https://tokens.coingecko.com/uniswap/all.json"))
+  }
+
+  const getJSON = async (url) => {
+    const blob = await fetch(url)
+    const json = await blob.json()
+    return json
+  };
+
   return (
     <div>
       <input placeholder="Search a name, address or symbol"></input>

@@ -27,7 +27,7 @@ npx hardhat test
 With external network forking:
 ```
 FORK=polygon npx hardhat node --network hardhat
-FORK=polygon npx hardhat task --network localhost
+FORK=polygon npx hardhat <task> --network localhost
 ```
 
 

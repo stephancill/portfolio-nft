@@ -81,7 +81,6 @@ contract PortfolioNFT is ERC721, Ownable {
         require(ownerOf(_tokenId) == msg.sender, "Not owner of address");
         
         // TODO: Use common default token list and register custom tokens
-        // TODO: Remove token
         IERC20Metadata(_tokenAddress).symbol();
         IERC20Metadata(_tokenAddress).balanceOf(msg.sender);
 
