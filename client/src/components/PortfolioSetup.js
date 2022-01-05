@@ -1,7 +1,7 @@
 import {useState } from 'react';
 import demoNFT from "./../img/demoNFT.png"
 import "./portfolioSetup.css"
-import {IoIosArrowDropleftCircle,IoIosRemoveCircle} from 'react-icons/io'
+import {IoIosArrowBack,IoIosAddCircle} from 'react-icons/io'
 import PortfolioUserTokensList from './PortfolioUserTokensList';
 import PortfolioAddTokens from './PortfolioAddTokens';
 
@@ -20,20 +20,39 @@ const PortfolioSetup = ({trackedAssets,walletConnected}) => {
         <img src={demoNFT}></img>
       </button>
       {!addingToken ? <>
+        <div className='titleBtnBar'>
+          <div>
+            <h3 style={{display:"flex",margin:"0px"}}>Wallet 202322</h3>
+            <div className='priceText'>$200,320,234</div>
+          </div>
+          <div className='titleBtnBarRight'>
+            <div>
+              <button className="pageBtn" onClick={back} style={{width:"130px"}}>
+                Add Token
+                <IoIosAddCircle className="removeIcon"></IoIosAddCircle>
+              </button>
+            </div>
+          </div>
+        </div>
         <PortfolioUserTokensList trackedAssets={trackedAssets}/>
-        <button className="addTokenBtn" onClick={back}>Add New Token</button>
-        <button style={{marginTop:"30px"}}>Update</button>
       </> : <>
-        <div className="backConatiner">
-          <h3 style={{marginTop:"30px",display:"flex"}}>Select a token </h3>
-          <div style={{paddingLeft:"200px",paddingTop:"25px"}}>
-            {/* Fix the button not being able to be clicked when over the icon */}
-            <button className="backBtn" onClick={back}>
-              <IoIosArrowDropleftCircle className="backIcon"/>
-            </button>
+        <div className="backConatiner" style={{marginBottom:"5px"}}>
+          <div className='titleBtnBar'>
+            <div>
+              <h3 style={{display:"flex",marginTop:"5px"}}>Select A Token</h3>
+            </div>
+            <div className='titleBtnBarRight'>
+              <div>
+                <button className="pageBtn" onClick={back} style={{width:"30px"}}>
+                  <IoIosArrowBack className="removeIcon" style={{marginLeft:"-2px",marginRight:"0px"}}></IoIosArrowBack>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
         <PortfolioAddTokens walletConnected={walletConnected}/>
+        <button style={{marginTop:"30px"}}>Update</button>
+
       </>}
     </div>
     

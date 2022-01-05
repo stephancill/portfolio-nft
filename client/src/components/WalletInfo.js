@@ -9,7 +9,6 @@ let element = document.getElementById("network")
 useEffect( async() => {
   element.value = network
   if (wrongNetwork==true) {
-    console.log("sssssss")
     element.value = "select"
   }
 }, [wrongNetwork,network])
