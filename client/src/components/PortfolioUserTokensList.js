@@ -1,5 +1,5 @@
 import { useState } from "react"
-import {IoIosArrowDropleftCircle,IoIosRemoveCircle} from 'react-icons/io'
+import {IoIosRemoveCircle} from 'react-icons/io'
 import "./portfolioSetup.css"
 
 const PortfolioUserTokensList = ({trackedAssets}) => {
@@ -19,27 +19,53 @@ const PortfolioUserTokensList = ({trackedAssets}) => {
 
   }
 
+  const hideItem = (i) => {
+    let r1 = document.getElementById("remove"+i)
+    let r2 = document.getElementById("remove1"+i)
+    r1.style.display = "none"
+    r2.style.display = "block"
+
+
+    
+  }
+  const showItem = (i) => {
+    let r1 = document.getElementById("remove"+i)
+    let r2 = document.getElementById("remove1"+i)
+    r1.style.display = "block"
+    r2.style.display = "none"
+
+  }
+
   return (
     <div>
-      <h3 style={{marginTop:"30px"}}>Wallet 202322</h3>
       {tokens[0] ? <>
         <div className="b2">
           {tokens.map((token, i,tokens) => ( <>
-            <div className="row" key={i}>
-                <div className="col">
-              <h3>{token.symbol}</h3>
+            <div className="row" key={i} id={i} 
+              onMouseEnter={() => hideItem(i)}
+              onMouseLeave={() => showItem(i)}
+            >
+              <div>
+                <div className="tokenIcon"></div>
+              </div>
+              <div style={{marginLeft:"15px"}}>
+                <h3 style={{margin:"0px",marginTop:"-2px"}}>{token.symbol}</h3>
+                <h4 style={{margin:"0px",textAlign:"left"}} >{token.balance}</h4>
               </div>
               <div className="col">
-                <h3>{token.balance}</h3>
-              </div>
-              <div className="col" style={{margin:"1px",marginRight:"10px",display:"flex"}}>
-                <div style={{width:"70px"}}></div>
-                <IoIosRemoveCircle className='removeIcon'/>
-                <button className=" removeBtn" name={token.symbol} onClick={removeToken}>
-                </button>
+                <div id={"remove"+i}>
+                  <h3 style={{textAlign:"right", marginTop:"-0px"}}>
+                    30340
+                  </h3>
+                </div>
+                <div id={"remove1"+i} style={{display:"none"}} >
+                  <button className=" removeBtn" name={token.symbol} onClick={removeToken} style={{width:"110px"}}>
+                    Remove
+                    <IoIosRemoveCircle className="removeIcon"></IoIosRemoveCircle>
+                  </button>
+                </div>
               </div>
             </div>
-            {i!==tokens.length-1 ?<div className="tableDiv"></div>: <></>}
             </>
           ))}
         </div>

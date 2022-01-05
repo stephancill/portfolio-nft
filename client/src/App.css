@@ -26,6 +26,7 @@ button {
   transition-duration: 0.3s;
   color: #c06286;
   height: 50px;
+  cursor: pointer;
 }
 button:hover {
   background: #c06286;
