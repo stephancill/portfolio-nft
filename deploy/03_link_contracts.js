@@ -10,7 +10,6 @@ const func = async function (hre) {
   // const WETHSymbol = (await WETHContract.symbol()).slice(1)
   const WETHSymbol = (await WETHContract.symbol()).slice(1)
 
-  // TODO: get weth price path
   const UniswapFactory = await deployments.get("UniswapV2Factory")
   const uniswapFactory = new ethers.Contract(UniswapFactory.address, UniswapFactory.abi, ethers.provider)
   const pairAddress = await uniswapFactory.getPair(WETH.address, BaseToken.address)
