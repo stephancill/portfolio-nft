@@ -17,6 +17,9 @@ npx hardhat test
 ### Generate frontend ABIs
 ```
 npx hardhat deploy --export-all ./client/src/contracts.json
+FORK=mainnet npx hardhat node --network hardhat
+FORK=mainnet npx hardhat deploy --export-all ./client/src/contracts.json --network localhost
+
 ```
 
 ## Testing
@@ -30,6 +33,16 @@ FORK=polygon npx hardhat node --network hardhat
 FORK=polygon npx hardhat <task> --network localhost
 ```
 
+### Frontend debugging with local chain
+
+1. Start node
+```
+FORK=mainnet npx hardhat node --network hardhat
+```
+2. Export ABIs
+```
+FORK=mainnet npx hardhat deploy --export ./client/src/contracts.json --network localhost
+```
 
 ## Deployment
 ### Checklist
