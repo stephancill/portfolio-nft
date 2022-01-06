@@ -59,13 +59,14 @@ const PortfolioUserTokensList = ({trackedAssets}) => {
                   </h3>
                 </div>
                 <div id={"remove1"+i} style={{display:"none"}} >
-                  <button className=" removeBtn" name={token.symbol} onClick={removeToken} style={{width:"110px"}}>
+                  <button className=" innerRowBtn" name={token.symbol} onClick={removeToken} style={{width:"110px"}}>
                     Remove
-                    <IoIosRemoveCircle className="removeIcon"></IoIosRemoveCircle>
+                    <IoIosRemoveCircle className="innerRowIcon"></IoIosRemoveCircle>
                   </button>
                 </div>
               </div>
             </div>
+
             </>
           ))}
         </div>

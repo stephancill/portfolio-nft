@@ -29,7 +29,7 @@ const PortfolioSetup = ({trackedAssets,walletConnected}) => {
             <div>
               <button className="pageBtn" onClick={back} style={{width:"130px"}}>
                 Add Token
-                <IoIosAddCircle className="removeIcon"></IoIosAddCircle>
+                <IoIosAddCircle className="innerRowIcon"></IoIosAddCircle>
               </button>
             </div>
           </div>
@@ -44,15 +44,13 @@ const PortfolioSetup = ({trackedAssets,walletConnected}) => {
             <div className='titleBtnBarRight'>
               <div>
                 <button className="pageBtn" onClick={back} style={{width:"30px"}}>
-                  <IoIosArrowBack className="removeIcon" style={{marginLeft:"-2px",marginRight:"0px"}}></IoIosArrowBack>
+                  <IoIosArrowBack className="innerRowIcon" style={{marginLeft:"-2px",marginRight:"0px"}}></IoIosArrowBack>
                 </button>
               </div>
             </div>
           </div>
         </div>
         <PortfolioAddTokens walletConnected={walletConnected}/>
-        <button style={{marginTop:"30px"}}>Update</button>
-
       </>}
     </div>
     
