@@ -1,5 +1,5 @@
 import generate from "./generate.js"
-import { useState } from "react"
+import { useState,useEffect} from "react"
 
 const Demo = () => {
   const [obj1, setObj1] = useState()
@@ -14,10 +14,10 @@ const Demo = () => {
     var sqr2 = (generate.sqr2())
     var cir1 = (generate.cir1())
     var cir2 = (generate.cir2())
-    var topSqr = (<rect x={sqr1.x} y={sqr1.y} width={sqr1.width} height={sqr1.height} transform={sqr1.rotate} fill="url(#paint0)"/>)
-    var botSqr = (<rect x={sqr2.x} y={sqr2.y} width={sqr2.width} height={sqr2.height} transform={sqr2.rotate} fill="url(#paint1)"/>)
-    var topCir = (<circle cx={cir1.x} cy={cir1.y} r={cir1.radius} transform={cir1.rotate} fill="url(#paint0)"/>)
-    var botCir = (<circle cx={cir2.x} cy={cir2.y} r={cir2.radius} transform={cir2.rotate} fill="url(#paint1)"/>)
+    var topSqr = (<rect class="blur" x={sqr1.x} y={sqr1.y} width={sqr1.width} height={sqr1.height} transform={sqr1.rotate} fill="url(#paint0)"/>)
+    var botSqr = (<rect class="blur"  x={sqr2.x} y={sqr2.y} width={sqr2.width} height={sqr2.height} transform={sqr2.rotate} fill="url(#paint1)"/>)
+    var topCir = (<circle class="blur"  cx={cir1.x} cy={cir1.y} r={cir1.radius} transform={cir1.rotate} fill="url(#paint0)"/>)
+    var botCir = (<circle class="blur"  cx={cir2.x} cy={cir2.y} r={cir2.radius} transform={cir2.rotate} fill="url(#paint1)"/>)
     setCol01(sqr1.col1)
     setCol02(sqr1.col2)
     setCol11(sqr2.col1)
@@ -29,48 +29,56 @@ const Demo = () => {
       setObj1(topSqr)
       setObj2(botSqr)
     } else if (a===1 && b===0){
-      setObj1(topCir)
+      setObj1(topSqr)
       setObj2(botSqr)
     } else if (a===0 && b===1){
       setObj1(topSqr)
       setObj2(botCir)
     } else {
-      setObj1(topCir)
+      setObj1(topSqr)
       setObj2(botCir)
     }
   }
+  
 
-  window.onload = () => {
-    setInterval(function(){
+  useEffect(() => {
+    const interval = setInterval(() => {
       populate()
     }, 1000);
-   }
+    return () => clearInterval(interval);
+  }, []);
+
   
   var h1 = "{ font: bold 30px sans-serif; fill:white}"
   var h2 = "{ font: normal 24px sans-serif; fill:white}"
   var h3 = "{ font: normal 14px sans-serif; fill:white}"
+  var blur = "{filter: url(#blurFilter);-webkit-filter: url(#blurFilter);-moz-filter: url(#blurFilter);-o-filter: url(#blurFilter);-ms-filter: url(#blurFilter);}"
 
   return (
     <div>
-      {obj1}
-
       <svg viewBox="0 0 300 300" fill="none" overflow="hidden" xmlns="http://www.w3.org/2000/svg">
         <style>
           .h1 {h1}
           .h2 {h2}
           .h3 {h3}
+          .blur {blur}
         </style>
+        
         <rect width="300" height="300" fill="#272727"/>
+        
         {obj1}
         {obj2}
+        <filter id="blurFilter">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="20" result="blur"/>
+        </filter>
         <defs>
         <linearGradient id="paint0" gradientUnits="userSpaceOnUse">
         <stop stop-color={col01}/>
-        <stop offset="0.5" stop-color={col02} />
+        <stop offset="1" stop-color={col02} />
         </linearGradient>
         <linearGradient id="paint1" gradientUnits="userSpaceOnUse">
-        <stop stop-color={col11} stop-opacity="1"/> 
-        <stop offset="0.5" stop-color={col12} />
+        <stop stop-color={col11} stop-opacity="0.5"/> 
+        <stop offset="1" stop-color={col12} />
         </linearGradient>
         <linearGradient id="stroke" x1="20%" y1="60%" x2="30%" y2="0%">
         <stop offset="50%"   stop-color="#fff" />

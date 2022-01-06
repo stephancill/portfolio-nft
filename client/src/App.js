@@ -155,7 +155,7 @@ const walletInfo = <WalletInfo updateNetwork={updateNetwork}  walletAdd={walletA
             <ConnectWalletInfo amountMinted={742}/> 
             <ConnectWallet  onClick={connectWallet} />
             <div className="break"></div>
-            <Demo/>
+            <Demo walletConnected={walletConnected}/>
             <NFTInfo/> 
             </>}</div>
           </CSSTransition>
