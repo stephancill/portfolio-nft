@@ -44,6 +44,7 @@ input:focus {
 
 .b2 {
   overflow-y: auto;
+  max-height: 250px;
 }
 .row {
   display: flex;
