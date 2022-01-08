@@ -1,15 +1,31 @@
-import {useState } from 'react';
+import {useState,useEffect } from 'react';
 import demoNFT from "./../img/demoNFT.png"
 import "./portfolioSetup.css"
 import {IoIosArrowBack,IoIosAddCircle} from 'react-icons/io'
 import PortfolioUserTokensList from './PortfolioUserTokensList';
 import PortfolioAddTokens from './PortfolioAddTokens';
+import { ethers } from "ethers";
 
-const PortfolioSetup = ({trackedAssets,walletConnected}) => {
+
+const PortfolioSetup = ({trackedAssets,walletConnected,cont,address,signer}) => {
   const [addingToken,setAddingToken] = useState(false)
+  const [NFTsvg,setNFTsvg] = useState([])
+
+  useEffect( async() => {
+    getNFT()
+  }, [])
 
   const back = () => {
     setAddingToken(!addingToken)
+  }
+
+  const getNFT = async () => {
+    const deployment = await cont.contracts.PortfolioNFT
+    const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi,signer)
+    const tokenURI = await portfolioNFT.tokenURI(1)
+    const svg = JSON.parse(atob(tokenURI.split(",")[1])).image
+    console.log(svg)
+    setNFTsvg(svg)
   }
 
   return (
@@ -17,7 +33,7 @@ const PortfolioSetup = ({trackedAssets,walletConnected}) => {
       <h2>Setup</h2>
       <h3 style={{marginTop:"10px"}}>Select a portfolio to configure.</h3>
       <button className="NFTBtn">
-        <img src={demoNFT}></img>
+        <img src={NFTsvg} style={{width:"348px"}}></img>
       </button>
       {!addingToken ? <>
         <div className='titleBtnBar'>
