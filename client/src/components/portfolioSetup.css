@@ -2,6 +2,7 @@
   padding: 0px;
   height: 350px;
   border-color: white;
+  margin-bottom: 20px;
 }
 .NFTBtn:hover {
   border: #ab78c5 6px solid !important;
@@ -29,7 +30,7 @@ input {
   border-radius: 5px;
   border: 1px #ab78c5 solid;
   stroke: none;
-  background: linear-gradient(90deg, #2e3f58 0%, #2b3440 100%);
+  background: #382d4f;
   color: #ab78c5;
   text-align: center;
   font-size: 18px;
@@ -44,10 +45,21 @@ input:focus {
 
 .b2 {
   overflow-y: auto;
+  max-height: 250px;
 }
 .row {
   display: flex;
-  margin-bottom: 10px;
+  padding-top: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  height: 34px;
+  padding-bottom: 5px;
+  transition: ease-in-out 0.2s;
+}
+.row:hover {
+  background: #151515;
+  border-radius: 5px;
+  padding-left: 5px;
 }
 .col {
   flex: 50%;
@@ -58,31 +70,33 @@ input:focus {
   text-align: right;
   display: inline-block;
 }
-.removeIcon {
+.innerRowIcon {
   width: 20px;
   height: 20px;
   margin-left: 5px;
   margin-right: -5px;
   margin-bottom: -5px;
 }
-.removeBtn {
+.innerRowBtn {
   height: 30px;
   border-radius: 20px;
   background: none;
-  border: #a978c4 1px solid;
+  border: #c06286 1px solid;
   z-index: 1;
-  color: #a978c4;
+  color: #c06286;
   font-size: 18px;
+  margin-top: 2px;
 }
-.removeBtn:hover {
-  background: #a978c4;
+.innerRowBtn:hover {
+  background: #c06286;
   color: white;
 }
 .tokenIcon {
-  height: 35px;
-  width: 35px;
+  height: 30px;
+  width: 30px;
   background: white;
   border-radius: 20px;
+  margin-top: 2.5px;
 }
 
 .titleBtnBar {

@@ -17,6 +17,8 @@ const [walletAddress,setWalletAdd] = useState("")
 const [network,setNetwork] = useState()
 const [wrongNetwork,setWrongNetwork] = useState(false)
 const [loaded,setLoaded] = useState(false)
+const [signer,setSigner] = useState()
+const contracts  =  require('./contracts.json')
 
 const trackedAssets = [{symbol: "ETH", balance: 10.20},{symbol: "USDC", balance: 1000.20}]
 
@@ -46,6 +48,7 @@ useEffect( async() => {
   const accounts = await window.ethereum.request({method: "eth_accounts"})
   if(accounts[0]){
     setWalletConnected(true)
+    connectWallet()
     setWalletAdd(accounts[0])
     getNetwork()
   }
@@ -69,9 +72,11 @@ const connectWallet = async () => {
   if (window.ethereum) {
     const provider = new ethers.providers.Web3Provider(window.ethereum)
     await provider.send("eth_requestAccounts", []);
-    const signer = provider.getSigner();
-    if (signer !== undefined) {
-      let userAddresss = await signer.getAddress();
+    const tempsigner = provider.getSigner();
+    setSigner(tempsigner)
+    console.log(tempsigner)
+    if (tempsigner !== undefined) {
+      let userAddresss = await tempsigner.getAddress();
       setWalletAdd(userAddresss)
       setWalletConnected(true)
     }
@@ -147,15 +152,15 @@ const walletInfo = <WalletInfo updateNetwork={updateNetwork}  walletAdd={walletA
                 {walletInfo}
                 </>:<>
                 {walletInfo}
-                <MintSection amountMinted={742} /> 
+                <MintSection amountMinted={742} cont={contracts} address={walletAddress} signer={signer}/> 
                 <div className="break"></div>
-                <PortfolioSetup trackedAssets={trackedAssets} walletConnected={walletConnected}/>
+                <PortfolioSetup trackedAssets={trackedAssets} walletConnected={walletConnected} cont={contracts} address={walletAddress} signer={signer}/>
               </>}
             </> : <>
             <ConnectWalletInfo amountMinted={742}/> 
             <ConnectWallet  onClick={connectWallet} />
             <div className="break"></div>
-            <Demo/>
+            <Demo walletConnected={walletConnected}/>
             <NFTInfo/> 
             </>}</div>
           </CSSTransition>
