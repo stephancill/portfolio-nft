@@ -7,6 +7,9 @@ const { task } = require("hardhat/config");
 const open = require('open')
 const fetch = require("node-fetch")
 
+const {getPaths} = require("./tasks/portfolio-nft")
+const listTokensOfOwner = require("./tasks/erc-721")
+
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
 task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
@@ -25,6 +28,13 @@ task("show", "Show token with ID", async ({tokenId}, {deployments, ethers}) => {
   const open = require("open")
   await open(svg, {app: {name: "google chrome"}})
 }).addParam("tokenId", "ID of the token to get")
+
+task("tokens", "Get all token IDs for address", async ({address}, {deployments, ethers}) => {
+  const deployment = await deployments.get("PortfolioNFT")
+  const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, ethers.provider)
+  const tokens = await listTokensOfOwner({token: portfolioNFT.address, account: address, provider: ethers.provider})
+  console.log(tokens)
+}).addParam("address", "Address to fetch tokens for")
 
 task("transfer", "Transfer token to address", async ({tokenId, toAddress}, {deployments, ethers}) => {
   const deployment = await deployments.get("PortfolioNFT")
@@ -53,8 +63,7 @@ task("track-token", "Gets route and tracks token for tokenId", async ({tokenId, 
   const priceFetcher = new ethers.Contract(PriceFetcher.address, PriceFetcher.abi, ethers.provider)
   const [account] = await ethers.getSigners()
   const {deployer} = await getNamedAccounts()
-  
-  const {getPaths} = require("./tasks/portfolio-nft")
+
   const baseTokenAddress = await portfolioNFT.baseTokenAddress()
 
 
