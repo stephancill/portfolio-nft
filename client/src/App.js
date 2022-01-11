@@ -153,7 +153,6 @@ const walletInfo = <WalletInfo updateNetwork={updateNetwork}  walletAdd={walletA
                 </>:<>
                 {walletInfo}
                 <MintSection amountMinted={742} cont={contracts} address={walletAddress} signer={signer}/> 
-                <div className="break"></div>
                 <PortfolioSetup trackedAssets={trackedAssets} walletConnected={walletConnected} cont={contracts} address={walletAddress} signer={signer}/>
               </>}
             </> : <>

@@ -3,7 +3,7 @@ import {IoIosAddCircle,IoIosRemoveCircle} from 'react-icons/io'
 
 import "./portfolioSetup.css"
 
-const PortfolioAddTokens = ({walletConnected}) => {
+const PortfolioAddTokens = ({walletConnected,cont,address,signer}) => {
   const [tokenList,setTokenList] = useState()
   const [tokens,setTokens] = useState([{}])
   const [userTokens,setUserTokens] = useState([])
@@ -24,6 +24,10 @@ const PortfolioAddTokens = ({walletConnected}) => {
     if(tempList) {
       setTokenLoaded(true)
     }
+  }
+
+  const addUserTokens = () => {
+    
   }
 
   const getJSON = async (url) => {

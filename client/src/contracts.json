@@ -3,19 +3,19 @@
   "chainId": "1",
   "contracts": {
     "Base64": {
-      "address": "0xA7c59f010700930003b33aB25a7a0679C860f29c",
+      "address": "0x3347B4d90ebe72BeFb30444C9966B2B990aE9FcB",
       "abi": "[]"
     },
     "CustomSort": {
-      "address": "0xfaAddC93baf78e89DCf37bA67943E1bE8F37Bb8c",
+      "address": "0x3155755b79aA083bd953911C92705B7aA82a18F9",
       "abi": "[]"
     },
     "OStrings": {
-      "address": "0x276C216D241856199A83bf27b2286659e5b877D3",
+      "address": "0x5bf5b11053e734690269C6B9D438F8C9d48F528A",
       "abi": "[]"
     },
     "PortfolioMetadata": {
-      "address": "0x5bf5b11053e734690269C6B9D438F8C9d48F528A",
+      "address": "0xab16A69A5a8c12C732e0DEFF4BE56A70bb64c926",
       "abi": [
         {
           "inputs": [
@@ -287,7 +287,7 @@
       ]
     },
     "PortfolioNFT": {
-      "address": "0x3155755b79aA083bd953911C92705B7aA82a18F9",
+      "address": "0x3aAde2dCD2Df6a8cAc689EE797591b2913658659",
       "abi": [
         {
           "inputs": [
@@ -1025,7 +1025,7 @@
       ]
     },
     "PriceFetcher": {
-      "address": "0x3347B4d90ebe72BeFb30444C9966B2B990aE9FcB",
+      "address": "0xffa7CA1AEEEbBc30C874d32C7e22F052BbEa0429",
       "abi": [
         {
           "inputs": [],

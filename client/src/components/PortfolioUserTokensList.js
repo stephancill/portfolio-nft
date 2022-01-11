@@ -16,7 +16,6 @@ const PortfolioUserTokensList = ({trackedAssets}) => {
     const symbol = e.target.getAttribute("name")
     setTokens(tokens.filter(item => item.symbol !== symbol));
     console.log()
-
   }
 
   const hideItem = (i) => {
@@ -24,16 +23,12 @@ const PortfolioUserTokensList = ({trackedAssets}) => {
     let r2 = document.getElementById("remove1"+i)
     r1.style.display = "none"
     r2.style.display = "block"
-
-
-    
   }
   const showItem = (i) => {
     let r1 = document.getElementById("remove"+i)
     let r2 = document.getElementById("remove1"+i)
     r1.style.display = "block"
     r2.style.display = "none"
-
   }
 
   return (

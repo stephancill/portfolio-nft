@@ -11,6 +11,7 @@ const MintSection = ({amountMinted,cont,address,signer}) => {
     const tokenId = txInfo.events[0].args.tokenId.toString()
     console.log("Minted", {tokenId})
   }
+  
   return (
     <div>
       <h2>Mint</h2>
