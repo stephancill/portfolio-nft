@@ -3,38 +3,16 @@ import {IoIosAddCircle,IoIosRemoveCircle} from 'react-icons/io'
 
 import "./portfolioSetup.css"
 
-const PortfolioAddTokens = ({walletConnected,cont,address,signer}) => {
-  const [tokenList,setTokenList] = useState()
+const PortfolioAddTokens = ({walletConnected,cont,address,signer,tokenList}) => {
   const [tokens,setTokens] = useState([{}])
   const [userTokens,setUserTokens] = useState([])
-  const [tokenLoaded,setTokenLoaded] = useState(false)
 
   useEffect(async()=>{
-    if (walletConnected) {
-      getTokenList()
-    }
-    if (tokenLoaded) {
+    if (tokenList) {
       searchToken("")
+      console.log(tokenList)
     }
-  },[tokenLoaded])
-
-  const getTokenList = async () => {
-    let tempList = await getJSON("https://tokens.coingecko.com/uniswap/all.json")
-    setTokenList(tempList)
-    if(tempList) {
-      setTokenLoaded(true)
-    }
-  }
-
-  const addUserTokens = () => {
-    
-  }
-
-  const getJSON = async (url) => {
-    const blob = await fetch(url)
-    const json = await blob.json()
-    return json
-  };
+  },[])
 
   const searchToken = (value) => {
     const tokenLength = tokenList.tokens.length

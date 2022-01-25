@@ -3,7 +3,7 @@
   height: 330px;
   width: 330px;
   border: #fff 1px solid;
-  margin-bottom: 12px;
+  margin-bottom: 0px;
 }
 .NFTBtn:hover {
   border: #c06286 1px solid;
@@ -68,10 +68,10 @@ input:focus {
   padding-right: 5px;
   height: 34px;
   padding-bottom: 5px;
-  transition: ease-in-out 0.2s;
+  transition: ease-in-out 0.05s;
 }
 .row:hover {
-  background: #151515;
+  background: linear-gradient(90deg, #1e1e1e 0%, #212121 100%);
   border-radius: 5px;
   padding-left: 5px;
 }
@@ -125,14 +125,14 @@ input:focus {
 .pageBtn {
   height: 30px;
   border-radius: 20px;
-  background: #c06286;
-  border: none;
+  background: none;
+  border: 1px solid #c06286;
   z-index: 1;
-  color: white;
+  color: #c06286;
   font-size: 18px;
 }
 .pageBtn:hover {
-  background: #d86f97;
+  background: #c06286;
 }
 .priceText {
   font-weight: bold;

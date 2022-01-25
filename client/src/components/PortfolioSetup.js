@@ -10,13 +10,16 @@ const listTokensOfOwner = require("./erc-721")
 
 
 
-const PortfolioSetup = ({trackedAssets,walletConnected,cont,address,signer}) => {
+const PortfolioSetup = ({trackedAssets,walletConnected,cont,address,signer,tokenList}) => {
   const [addingToken,setAddingToken] = useState(false)
   const [userNFTs,setUserNFTs] = useState([{}])
+  const [trackedTokens,setTrackedTokens] = useState([{}])
+  const [tokenID,setTokenID] = useState([])
+  const [tokenAddresses,setTokenAddresses] = useState([])
 
   useEffect( async() => {
     getUsersNFTTokens()
-  }, [])
+  }, [tokenList])
 
   const back = () => {
     setAddingToken(!addingToken)
@@ -34,13 +37,42 @@ const PortfolioSetup = ({trackedAssets,walletConnected,cont,address,signer}) => 
     const deployment = await cont.contracts.PortfolioNFT
     const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, signer)
     const tokens = await listTokensOfOwner({token: portfolioNFT.address, account: address, provider: signer})
-    console.log(tokens)
     const tempNFTsvgs = []
+    let tokenIDs = Array.from(tokens);
+    setTokenID(tokenIDs)
     for (let i=0;i<tokens.size;i++) {  
-      tempNFTsvgs[i] = await getNFT(i+1)
+      tempNFTsvgs[i] = await getNFT(tokenIDs[i])
     }
     setUserNFTs(tempNFTsvgs)
   }
+  
+  const getTrackedTokens = async (clickedToken) => {
+    const deployment = await cont.contracts.PortfolioNFT
+    const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi,signer)
+    const trackedTokens = await portfolioNFT.getTokenAddresses(clickedToken)
+    console.log(trackedTokens)
+    let tempTrackedTokens = [] 
+    for (let i=0; i<trackedTokens.length; i++) {
+      tempTrackedTokens[i] = searchToken(trackedTokens[i])
+    }
+    console.log(tempTrackedTokens)
+    setTrackedTokens(tempTrackedTokens)
+    //setTrackedTokenAddresses(trackedTokens)
+  }
+
+  const searchToken = (address) => {
+    const tokenLength = tokenList.tokens.length
+    let fetchToken = {}
+    for (let i = 0;i < tokenLength; i++){
+      if (tokenList.tokens[i].address.toUpperCase() === address.toUpperCase()) {
+        fetchToken = {symbol:tokenList.tokens[i].symbol.toUpperCase(),logo:tokenList.tokens[i].logoURI}
+        break 
+      }
+    }
+    return(fetchToken)
+  }
+
+
 
   return (
     <div>
@@ -50,9 +82,12 @@ const PortfolioSetup = ({trackedAssets,walletConnected,cont,address,signer}) => 
         <h3 style={{marginTop:"10px"}}>Select a portfolio to configure.</h3>
         <div className='NFTcontainer'>
         {userNFTs.map((NFT, i) => ( <>
-            <button className="NFTBtn" id={"nft"+i}>
+            <button className="NFTBtn" id={"nft"+i} onClick={()=>{getTrackedTokens(tokenID[i])}}>
               <img src={NFT.svg} style={{width:"328px"}}></img>
             </button>
+            {(userNFTs.length!=i+1) && 
+              <div  style={{height:"10px",width:"100%"}}></div>
+            }
           </>
           ))}
         </div>
@@ -71,7 +106,7 @@ const PortfolioSetup = ({trackedAssets,walletConnected,cont,address,signer}) => 
               </div>
             </div>
           </div>
-          <PortfolioUserTokensList trackedAssets={trackedAssets}/>
+          <PortfolioUserTokensList trackedAssets={trackedTokens}/>
         </> : <>
           <div className="backConatiner" style={{marginBottom:"5px"}}>
             <div className='titleBtnBar'>
@@ -87,7 +122,7 @@ const PortfolioSetup = ({trackedAssets,walletConnected,cont,address,signer}) => 
               </div>
             </div>
           </div>
-          <PortfolioAddTokens walletConnected={walletConnected} cont={cont} address={address} signer={signer}/>
+          <PortfolioAddTokens walletConnected={walletConnected} cont={cont} address={address} signer={signer} tokenList={tokenList}/>
         </>}
       </>}
     </div>

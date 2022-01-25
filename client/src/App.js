@@ -19,6 +19,7 @@ const [wrongNetwork,setWrongNetwork] = useState(false)
 const [loaded,setLoaded] = useState(false)
 const [signer,setSigner] = useState()
 const contracts  =  require('./contracts.json')
+const [tokenList,setTokenList] = useState()
 
 const trackedAssets = [{symbol: "ETH", balance: 10.20},{symbol: "USDC", balance: 1000.20}]
 
@@ -40,6 +41,8 @@ const networks = {
   }
 };
 
+
+
 window.onload = () => {
   setLoaded(!loaded)
  }
@@ -53,6 +56,8 @@ useEffect( async() => {
     getNetwork()
   }
   if (window.ethereum) {
+    getTokenList()
+    console.log("ss")
     window.ethereum.on("accountsChanged", ([newAddress]) => {
       if (newAddress === undefined) {
         setWalletConnected(false)
@@ -67,6 +72,18 @@ useEffect( async() => {
     })
   }
 }, [])
+
+const getTokenList = async () => {
+  let tempList = await getJSON("https://tokens.coingecko.com/uniswap/all.json")
+  console.log(tempList)
+  setTokenList(tempList)
+}
+
+const getJSON = async (url) => {
+  const blob = await fetch(url)
+  const json = await blob.json()
+  return json
+};
 
 const connectWallet = async () => {
   if (window.ethereum) {
@@ -153,7 +170,7 @@ const walletInfo = <WalletInfo updateNetwork={updateNetwork}  walletAdd={walletA
                 </>:<>
                 {walletInfo}
                 <MintSection amountMinted={742} cont={contracts} address={walletAddress} signer={signer}/> 
-                <PortfolioSetup trackedAssets={trackedAssets} walletConnected={walletConnected} cont={contracts} address={walletAddress} signer={signer}/>
+                <PortfolioSetup trackedAssets={trackedAssets} walletConnected={walletConnected} cont={contracts} address={walletAddress} signer={signer} tokenList={tokenList}/>
               </>}
             </> : <>
             <ConnectWalletInfo amountMinted={742}/> 

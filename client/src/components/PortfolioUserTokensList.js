@@ -1,10 +1,16 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {IoIosRemoveCircle} from 'react-icons/io'
 import "./portfolioSetup.css"
 
 const PortfolioUserTokensList = ({trackedAssets}) => {
   const [tokens,setTokens] = useState(trackedAssets)
 
+  useEffect( async() => {
+    if (trackedAssets) {
+      setTokens(trackedAssets)
+    }
+  }, [trackedAssets])
+  
   const addToken = () => {
     setTokens((prevTokens)=>[
       ...prevTokens,
@@ -31,8 +37,14 @@ const PortfolioUserTokensList = ({trackedAssets}) => {
     r2.style.display = "none"
   }
 
+  const printTokens=()=>{
+    console.log("s")
+    console.log(trackedAssets)
+  }
+
   return (
     <div>
+      <button onClick={printTokens}></button>
       {tokens[0] ? <>
         <div className="b2">
           {tokens.map((token, i,tokens) => ( <>
@@ -61,7 +73,6 @@ const PortfolioUserTokensList = ({trackedAssets}) => {
                 </div>
               </div>
             </div>
-
             </>
           ))}
         </div>
