@@ -8,14 +8,18 @@ import { ethers } from "ethers";
 
 const listTokensOfOwner = require("./erc-721")
 
-
-
-const PortfolioSetup = ({trackedAssets,walletConnected,cont,address,signer,tokenList}) => {
+const PortfolioSetup = ({trackedAssets,walletConnected,cont,walletAddress,signer,tokenList}) => {
   const [addingToken,setAddingToken] = useState(false)
   const [userNFTs,setUserNFTs] = useState([{}])
   const [trackedTokens,setTrackedTokens] = useState([{}])
   const [tokenID,setTokenID] = useState([])
-  const [tokenAddresses,setTokenAddresses] = useState([])
+  const baseToken  =  require('./../contracts.json')
+  
+  // TODO 
+  // add token to nft 
+  // then update the NFTtokenlist from portfoliousertokenslist
+  // remove token from list
+  // get the balance of the tokens
 
   useEffect( async() => {
     getUsersNFTTokens()
@@ -36,7 +40,7 @@ const PortfolioSetup = ({trackedAssets,walletConnected,cont,address,signer,token
   const getUsersNFTTokens = async() => {
     const deployment = await cont.contracts.PortfolioNFT
     const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, signer)
-    const tokens = await listTokensOfOwner({token: portfolioNFT.address, account: address, provider: signer})
+    const tokens = await listTokensOfOwner({token: portfolioNFT.address, account: walletAddress, provider: signer})
     const tempNFTsvgs = []
     let tokenIDs = Array.from(tokens);
     setTokenID(tokenIDs)
@@ -50,12 +54,10 @@ const PortfolioSetup = ({trackedAssets,walletConnected,cont,address,signer,token
     const deployment = await cont.contracts.PortfolioNFT
     const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi,signer)
     const trackedTokens = await portfolioNFT.getTokenAddresses(clickedToken)
-    console.log(trackedTokens)
     let tempTrackedTokens = [] 
     for (let i=0; i<trackedTokens.length; i++) {
       tempTrackedTokens[i] = searchToken(trackedTokens[i])
     }
-    console.log(tempTrackedTokens)
     setTrackedTokens(tempTrackedTokens)
     //setTrackedTokenAddresses(trackedTokens)
   }
@@ -69,13 +71,49 @@ const PortfolioSetup = ({trackedAssets,walletConnected,cont,address,signer,token
         break 
       }
     }
-    return(fetchToken)
+    return(fetchToken)  
   }
 
+  const getBalance = async () => {
+    let minABI = [
+      // balanceOf
+      {
+        "constant":true,
+        "inputs":[{"name":"_owner","type":"address"}],
+        "name":"balanceOf",
+        "outputs":[{"name":"balance","type":"uint256"}],
+        "type":"function"
+      },
+      // decimals
+      {
+        "constant":true,
+        "inputs":[],
+        "name":"decimals",
+        "outputs":[{"name":"","type":"uint8"}],
+        "type":"function"
+      }
+    ];
+    let contract = new ethers.Contract(baseToken.BaseToken.abi).at("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2");
+    const balance = await contract.balanceOf(walletAddress)
+    return balance
+  }
 
+  // remove this and make this a trigger to get the tokens for NFT "getTrackedTokens" when they are confimed on portfolioaddtokens
+  const addNewToken = async (childData) => {
+    for (let i=0; i<childData.length;i++) {
+      setTrackedTokens((prevTokens)=>[
+        ...prevTokens,childData[i] 
+      ]) 
+    }
+  }
+
+  const checkTokens = () => {
+    console.log(trackedTokens)
+  }
 
   return (
     <div>
+      <button onClick={checkTokens}></button>
       {!userNFTs ? <></>: <>
         <div className="break"></div>
         <h2>Setup</h2>
@@ -106,7 +144,7 @@ const PortfolioSetup = ({trackedAssets,walletConnected,cont,address,signer,token
               </div>
             </div>
           </div>
-          <PortfolioUserTokensList trackedAssets={trackedTokens}/>
+          <PortfolioUserTokensList trackedAssets={trackedTokens} />
         </> : <>
           <div className="backConatiner" style={{marginBottom:"5px"}}>
             <div className='titleBtnBar'>
@@ -122,7 +160,7 @@ const PortfolioSetup = ({trackedAssets,walletConnected,cont,address,signer,token
               </div>
             </div>
           </div>
-          <PortfolioAddTokens walletConnected={walletConnected} cont={cont} address={address} signer={signer} tokenList={tokenList}/>
+          <PortfolioAddTokens tokenList={tokenList} addNewToken={addNewToken} signer={signer} walletAddress={walletAddress} cont={cont}/>
         </>}
       </>}
     </div>

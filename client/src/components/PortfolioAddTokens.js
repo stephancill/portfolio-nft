@@ -2,9 +2,11 @@ import {useEffect,useState} from 'react'
 import {IoIosAddCircle,IoIosRemoveCircle} from 'react-icons/io'
 
 import "./portfolioSetup.css"
+import { ethers } from "ethers";
 
-const PortfolioAddTokens = ({walletConnected,cont,address,signer,tokenList}) => {
+const PortfolioAddTokens = ({tokenList,addNewToken,signer,walletAddress,cont}) => {
   const [tokens,setTokens] = useState([{}])
+  const [tokenAdressesAdd,setTokenAdressesAdd] = useState([])
   const [userTokens,setUserTokens] = useState([])
 
   useEffect(async()=>{
@@ -21,7 +23,7 @@ const PortfolioAddTokens = ({walletConnected,cont,address,signer,tokenList}) => 
     let a = 0
     for (let i = 0;i < tokenLength; i++){
       if (tokenList.tokens[i].symbol.substring(0,valueLenth).toUpperCase() === value.toUpperCase()) {
-        showTokens[a] = {symbol:tokenList.tokens[i].symbol.toUpperCase(),logo:tokenList.tokens[i].logoURI}
+        showTokens[a] = {symbol:tokenList.tokens[i].symbol.toUpperCase(),logo:tokenList.tokens[i].logoURI,address:tokenList.tokens[i].address}
         a=a+1
       }
     }
@@ -44,6 +46,30 @@ const PortfolioAddTokens = ({walletConnected,cont,address,signer,tokenList}) => 
     if(foundDuplicate==false){
       setUserTokens(userTokens => [...userTokens, tokens[a]]);
     }
+    addTokenAdresses()
+  }
+
+  const addTokenAdresses = async () => {
+    console.log("ss")
+    let tokenAddresses = []
+    for (let i=0; i<userTokens.length; i++) {
+      console.log(userTokens[i].address)
+      tokenAddresses[i] = userTokens[i].address
+    }
+    setTokenAdressesAdd(tokenAddresses)
+  }
+
+  const addTokensToList = () => {
+    addNewToken(userTokens.address)
+  }
+
+  const updateTokens = async () => {
+    const deployment = await cont.contracts.PortfolioNFT
+    const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, signer)
+    console.log(tokenAdressesAdd)
+    const tx = await portfolioNFT.connect(signer).trackToken(1,tokenAdressesAdd)
+    const txInfo = await tx.wait()
+    console.log(txInfo)
   }
   
   const removeUserList = (a)=> {
@@ -114,7 +140,7 @@ const PortfolioAddTokens = ({walletConnected,cont,address,signer,tokenList}) => 
             </>
           ))}
         </div>
-        <button style={{marginTop:"30px"}}>Update</button>
+        <button style={{marginTop:"30px"}} onClick={updateTokens} >Update</button>
         </>: <></>}
     </div>
   )

@@ -9,14 +9,12 @@ const PortfolioUserTokensList = ({trackedAssets}) => {
     if (trackedAssets) {
       setTokens(trackedAssets)
     }
-  }, [trackedAssets])
+    if (tokens) {
+      console.log(tokens)
+    }
+  }, [trackedAssets,tokens])
   
-  const addToken = () => {
-    setTokens((prevTokens)=>[
-      ...prevTokens,
-      { symbol: "KLIMA", balance:400 } 
-    ])
-  }
+
   
   const removeToken = (e) => {
     const symbol = e.target.getAttribute("name")
@@ -37,14 +35,8 @@ const PortfolioUserTokensList = ({trackedAssets}) => {
     r2.style.display = "none"
   }
 
-  const printTokens=()=>{
-    console.log("s")
-    console.log(trackedAssets)
-  }
-
   return (
     <div>
-      <button onClick={printTokens}></button>
       {tokens[0] ? <>
         <div className="b2">
           {tokens.map((token, i,tokens) => ( <>
@@ -66,7 +58,7 @@ const PortfolioUserTokensList = ({trackedAssets}) => {
                   </h3>
                 </div>
                 <div id={"remove1"+i} style={{display:"none"}} >
-                  <button className=" innerRowBtn" name={token.symbol} onClick={removeToken} style={{width:"110px"}}>
+                  <button className="innerRowBtn" name={token.symbol} onClick={removeToken} style={{width:"110px"}}>
                     Remove
                     <IoIosRemoveCircle className="innerRowIcon"></IoIosRemoveCircle>
                   </button>
