@@ -64,6 +64,7 @@ const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont}) => {
     console.log(tokenAdressesAdd)
     let arr = [] 
     const tx = await portfolioNFT.connect(signer).trackTokens(1,tokenAdressesAdd,arr)
+    // ADD THE USERS SELECTED TOKEN, dont hard code it 
     const txInfo = await tx.wait()
     console.log(txInfo)
   }
