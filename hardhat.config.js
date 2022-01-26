@@ -100,7 +100,7 @@ task("track-token", "Gets route and tracks token for tokenId", async ({tokenId, 
   console.log("Done", tokenAddress, paths[0])
 })
 .addParam("tokenId", "Owner of NFT")
-.addParam("tokenAddress", "Owner of NFT")
+.addParam("tokenAddress", "Address of token")
 
 task("quote", "Gets price for in token in terms of out token", async ({tokenIn, tokenOut}, {deployments, ethers}) => {
   const deployment = await deployments.get("PriceFetcher")

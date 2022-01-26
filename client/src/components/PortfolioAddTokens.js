@@ -4,9 +4,8 @@ import {IoIosAddCircle,IoIosRemoveCircle} from 'react-icons/io'
 import "./portfolioSetup.css"
 import { ethers } from "ethers";
 
-const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont}) => {
+const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont, setShouldFetchUpdatedSVG}) => {
   const [tokens,setTokens] = useState([{}])
-  const [tokenAdressesAdd,setTokenAdressesAdd] = useState([])
   const [userTokens,setUserTokens] = useState([])
 
   useEffect(async()=>{
@@ -45,32 +44,22 @@ const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont}) => {
     if(foundDuplicate==false){
       setUserTokens(userTokens => [...userTokens, tokens[a]]);
     }
-    addTokenAdresses()
-  }
-
-  const addTokenAdresses = async () => {
-    console.log("ss")
-    let tokenAddresses = []
-    for (let i=0; i<userTokens.length; i++) {
-      console.log(userTokens[i].address)
-      tokenAddresses[i] = userTokens[i].address
-    }
-    setTokenAdressesAdd(tokenAddresses)
   }
 
   const updateTokens = async () => {
     const deployment = await cont.contracts.PortfolioNFT
     const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, signer)
-    console.log(tokenAdressesAdd)
-    let arr = [] 
-    const tx = await portfolioNFT.connect(signer).trackTokens(1,tokenAdressesAdd,arr)
+    let tokenAddresss = userTokens.map(token => token.address)
+    let tokenPricePaths = userTokens.map(i => [])
+    
+    const tx = await portfolioNFT.connect(signer).trackTokens(1,tokenAddresss,tokenPricePaths)
     const txInfo = await tx.wait()
     console.log(txInfo)
+    setShouldFetchUpdatedSVG(true)
   }
   
   const removeUserList = (a)=> {
     setUserTokens(userTokens.filter(item => item !== userTokens[a]));
-    setTokenAdressesAdd(tokenAdressesAdd.filter(item => item !== tokenAdressesAdd[a]))
   }
 
   const hideItem = (i) => {
@@ -94,7 +83,7 @@ const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont}) => {
     <div>
       <input placeholder="Search a name, address or symbol" onChange={e => searchToken(e.target.value)}></input>
         <div className="b2" style={{marginTop:"-10px"}}>
-        {tokens.map((token, i) => ( <>
+        {(tokens.length > 10 ? [] : tokens).map((token, i) => ( <>
             <div className="row" key={i} id={i}
             onMouseEnter={() => showItem(i)}
             onMouseLeave={() => hideItem(i)} >

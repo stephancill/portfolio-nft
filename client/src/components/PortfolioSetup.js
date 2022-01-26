@@ -14,6 +14,7 @@ const PortfolioSetup = ({cont,walletAddress,signer,tokenList}) => {
   const [userNFTs,setUserNFTs] = useState([{}])
   const [trackedTokens,setTrackedTokens] = useState([{}])
   const [tokenID,setTokenID] = useState([])
+  const [shouldFetchUpdatedSVG, setShouldFetchUpdatedSVG] = useState(false)
   
   // TODO 
   // add token to nft 
@@ -24,6 +25,13 @@ const PortfolioSetup = ({cont,walletAddress,signer,tokenList}) => {
   useEffect( async() => {
     getUsersNFTTokens()
   }, [tokenList])
+
+  useEffect(() => {
+    if (shouldFetchUpdatedSVG) {
+      setShouldFetchUpdatedSVG(false)
+      getUsersNFTTokens()
+    }
+  }, [shouldFetchUpdatedSVG])
 
   const back = () => {
     setAddingToken(!addingToken)
@@ -111,7 +119,7 @@ const PortfolioSetup = ({cont,walletAddress,signer,tokenList}) => {
               </div>
             </div>
           </div>
-          <PortfolioUserTokensList trackedAssets={trackedTokens} />
+          <PortfolioUserTokensList trackedAssets={trackedTokens} signer={signer} walletAddress={walletAddress} cont={cont} setShouldFetchUpdatedSVG={setShouldFetchUpdatedSVG} />
         </> : <>
           <div className="backConatiner" style={{marginBottom:"5px"}}>
             <div className='titleBtnBar'>
@@ -127,7 +135,7 @@ const PortfolioSetup = ({cont,walletAddress,signer,tokenList}) => {
               </div>
             </div>
           </div>
-          <PortfolioAddTokens tokenList={tokenList} signer={signer} walletAddress={walletAddress} cont={cont}/>
+          <PortfolioAddTokens tokenList={tokenList} signer={signer} walletAddress={walletAddress} cont={cont} setShouldFetchUpdatedSVG={setShouldFetchUpdatedSVG}/>
         </>}
       </>}
     </div>

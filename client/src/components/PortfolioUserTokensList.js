@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react"
 import {IoIosRemoveCircle} from 'react-icons/io'
 import "./portfolioSetup.css"
+import { ethers } from "ethers"
 
-const PortfolioUserTokensList = ({trackedAssets}) => {
+const PortfolioUserTokensList = ({signer,walletAddress,cont, setShouldFetchUpdatedSVG,trackedAssets}) => {
   const [tokens,setTokens] = useState(trackedAssets)
   const [removeUserTokens,setRemoveUserTokens] = useState([])
   const [removeUserTokensAdrresses,setRemoveUserTokensAdrresses] = useState([])
@@ -40,7 +41,16 @@ const PortfolioUserTokensList = ({trackedAssets}) => {
     setRemoveUserTokensAdrresses(removeUserTokensAdrresses.filter(item => item !== removeUserTokensAdrresses[i]))
   }
 
-  const updateUserTokens = () =>{}
+  const removeTokens = async () => {
+    console.log(removeUserTokens)
+    const deployment = await cont.contracts.PortfolioNFT
+    const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, signer)
+    let tokenAddresss = removeUserTokens.map(token => token.address)
+    const tx = await portfolioNFT.connect(signer).removeTokens(1,tokenAddresss)
+    const txInfo = await tx.wait()
+    console.log(txInfo)
+    setShouldFetchUpdatedSVG(true)
+  }
 
   const hideItem = (i) => {
     let r1 = document.getElementById("remove"+i)
@@ -101,7 +111,7 @@ const PortfolioUserTokensList = ({trackedAssets}) => {
         <h3>No tokens being tracked.</h3>
         </>}
         {removeUserTokens.length ? <>
-        <h3 style={{marginBottom:"10px"}}>Your Tokens To Add</h3>
+        <h3 style={{marginBottom:"10px"}}>Your Tokens To Remove</h3>
         <div className="b2">
         {removeUserTokens.map((token, i) => ( <>
             <div className="row" key={i} id={i}
@@ -123,7 +133,7 @@ const PortfolioUserTokensList = ({trackedAssets}) => {
             </>
           ))}
         </div>
-        <button onlClick={()=>{updateUserTokens()}} style={{marginTop:"30px"}}>Remove Tokens</button>
+        <button onClick={()=>{removeTokens()}} style={{marginTop:"30px"}}>Remove Tokens</button>
         </>: <></>}
     </div>
   )

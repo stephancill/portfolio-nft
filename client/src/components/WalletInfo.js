@@ -4,17 +4,17 @@ import { useEffect } from 'react';
 
 
 const WalletInfo = ({updateNetwork,walletAdd,wrongNetwork,network}) => {
-let element = document.getElementById("network")
-
+let networkElement
 useEffect( async() => {
-  element.value = network
+  networkElement = document.getElementById("network")
+  networkElement.value = network
   if (wrongNetwork==true) {
-    element.value = "select"
+    networkElement.value = "select"
   }
 }, [wrongNetwork,network])
 
 const changeNetwork=(e)=> {
-  updateNetwork(element.value)
+  updateNetwork(networkElement.value)
 }
   return (
     <div>

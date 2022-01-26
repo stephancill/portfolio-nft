@@ -56,7 +56,9 @@ useEffect( async() => {
     getNetwork()
   }
   if (window.ethereum) {
-    getTokenList()
+    if (!tokenList) {
+      getTokenList()
+    }
     console.log("ss")
     window.ethereum.on("accountsChanged", ([newAddress]) => {
       if (newAddress === undefined) {

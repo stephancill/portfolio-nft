@@ -7,6 +7,7 @@ const MintSection = ({amountMinted,cont,address,signer}) => {
     const deployment = cont.contracts.PortfolioNFT
     const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, signer)
     const tx = await portfolioNFT.connect(signer).mint(address)
+    console.log(tx)
     const txInfo = await tx.wait()
     const tokenId = txInfo.events[0].args.tokenId.toString()
     console.log("Minted", {tokenId})
