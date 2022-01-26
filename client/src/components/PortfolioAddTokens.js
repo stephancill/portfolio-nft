@@ -4,7 +4,7 @@ import {IoIosAddCircle,IoIosRemoveCircle} from 'react-icons/io'
 import "./portfolioSetup.css"
 import { ethers } from "ethers";
 
-const PortfolioAddTokens = ({tokenList,addNewToken,signer,walletAddress,cont}) => {
+const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont}) => {
   const [tokens,setTokens] = useState([{}])
   const [tokenAdressesAdd,setTokenAdressesAdd] = useState([])
   const [userTokens,setUserTokens] = useState([])
@@ -41,7 +41,6 @@ const PortfolioAddTokens = ({tokenList,addNewToken,signer,walletAddress,cont}) =
       }
     } else {
       foundDuplicate = true
-      setUserTokens(userTokens => [...userTokens, tokens[a]]);
     }
     if(foundDuplicate==false){
       setUserTokens(userTokens => [...userTokens, tokens[a]]);
@@ -59,21 +58,19 @@ const PortfolioAddTokens = ({tokenList,addNewToken,signer,walletAddress,cont}) =
     setTokenAdressesAdd(tokenAddresses)
   }
 
-  const addTokensToList = () => {
-    addNewToken(userTokens.address)
-  }
-
   const updateTokens = async () => {
     const deployment = await cont.contracts.PortfolioNFT
     const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, signer)
     console.log(tokenAdressesAdd)
-    const tx = await portfolioNFT.connect(signer).trackToken(1,tokenAdressesAdd)
+    let arr = [] 
+    const tx = await portfolioNFT.connect(signer).trackTokens(1,tokenAdressesAdd,arr)
     const txInfo = await tx.wait()
     console.log(txInfo)
   }
   
   const removeUserList = (a)=> {
     setUserTokens(userTokens.filter(item => item !== userTokens[a]));
+    setTokenAdressesAdd(tokenAdressesAdd.filter(item => item !== tokenAdressesAdd[a]))
   }
 
   const hideItem = (i) => {

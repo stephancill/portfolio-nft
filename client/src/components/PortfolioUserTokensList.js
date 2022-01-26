@@ -4,6 +4,8 @@ import "./portfolioSetup.css"
 
 const PortfolioUserTokensList = ({trackedAssets}) => {
   const [tokens,setTokens] = useState(trackedAssets)
+  const [removeUserTokens,setRemoveUserTokens] = useState([])
+  const [removeUserTokensAdrresses,setRemoveUserTokensAdrresses] = useState([])
 
   useEffect( async() => {
     if (trackedAssets) {
@@ -14,13 +16,31 @@ const PortfolioUserTokensList = ({trackedAssets}) => {
     }
   }, [trackedAssets,tokens])
   
-
-  
-  const removeToken = (e) => {
-    const symbol = e.target.getAttribute("name")
-    setTokens(tokens.filter(item => item.symbol !== symbol));
-    console.log()
+  const removeToken = (i) => {
+    let foundDuplicate = false
+    if (removeUserTokensAdrresses) {
+      for (let j = 0 ; j< removeUserTokensAdrresses.length;j++){
+          if (tokens[i].address=== removeUserTokensAdrresses[j] ) {
+            foundDuplicate = true
+            break
+          }
+      }
+    } else {
+      foundDuplicate = true
+    }
+    if(!foundDuplicate){
+      console.log("2"+tokens[i].address)
+      setRemoveUserTokensAdrresses(removeUserTokensAdrresses => [...removeUserTokensAdrresses, tokens[i].address])
+      setRemoveUserTokens(removeUserTokens => [...removeUserTokens, tokens[i]])
+    }
   }
+
+  const cancelRemoveToken = (i) => {
+    setRemoveUserTokens(removeUserTokens.filter(item => item !== removeUserTokens[i]));
+    setRemoveUserTokensAdrresses(removeUserTokensAdrresses.filter(item => item !== removeUserTokensAdrresses[i]))
+  }
+
+  const updateUserTokens = () =>{}
 
   const hideItem = (i) => {
     let r1 = document.getElementById("remove"+i)
@@ -28,18 +48,27 @@ const PortfolioUserTokensList = ({trackedAssets}) => {
     r1.style.display = "none"
     r2.style.display = "block"
   }
+
   const showItem = (i) => {
     let r1 = document.getElementById("remove"+i)
     let r2 = document.getElementById("remove1"+i)
     r1.style.display = "block"
     r2.style.display = "none"
   }
+  const hideItemList = (i) => {
+    let r1 = document.getElementById("item"+i)
+    r1.style.display = "none"
+  }
+  const showItemList = (i) => {
+    let r1 = document.getElementById("item"+i)
+    r1.style.display = "block"
+  }
 
   return (
     <div>
-      {tokens[0] ? <>
+      {tokens[0].symbol ? <>
         <div className="b2">
-          {tokens.map((token, i,tokens) => ( <>
+          {tokens.map((token, i) => ( <>
             <div className="row" key={i} id={i} 
               onMouseEnter={() => hideItem(i)}
               onMouseLeave={() => showItem(i)}
@@ -58,7 +87,7 @@ const PortfolioUserTokensList = ({trackedAssets}) => {
                   </h3>
                 </div>
                 <div id={"remove1"+i} style={{display:"none"}} >
-                  <button className="innerRowBtn" name={token.symbol} onClick={removeToken} style={{width:"110px"}}>
+                  <button className="innerRowBtn" name={token.symbol} onClick={()=>removeToken(i)} style={{width:"110px"}}>
                     Remove
                     <IoIosRemoveCircle className="innerRowIcon"></IoIosRemoveCircle>
                   </button>
@@ -68,7 +97,34 @@ const PortfolioUserTokensList = ({trackedAssets}) => {
             </>
           ))}
         </div>
-        </> : <></>}
+        </> : <>
+        <h3>No tokens being tracked.</h3>
+        </>}
+        {removeUserTokens.length ? <>
+        <h3 style={{marginBottom:"10px"}}>Your Tokens To Add</h3>
+        <div className="b2">
+        {removeUserTokens.map((token, i) => ( <>
+            <div className="row" key={i} id={i}
+            onMouseEnter={() => showItemList(i)}
+            onMouseLeave={() => hideItemList(i)} >
+                <img className="tokenIcon" src={token.logo}></img>
+              <div style={{marginLeft:"15px",height:"30px"}}>
+                <h3 style={{margin:"none",marginTop:"6px",width:"200px"}}>{token.symbol}</h3>
+              </div>
+              <div className="col">
+                <div id={"item"+i} style={{display:"none"}} >
+                  <button className="innerRowBtn" onClick={()=>cancelRemoveToken(i)} style={{width:"100px"}}>
+                    Cancel
+                    <IoIosRemoveCircle className="innerRowIcon"></IoIosRemoveCircle>
+                  </button>
+                </div>
+              </div>
+            </div>
+            </>
+          ))}
+        </div>
+        <button onlClick={()=>{updateUserTokens()}} style={{marginTop:"30px"}}>Remove Tokens</button>
+        </>: <></>}
     </div>
   )
 }

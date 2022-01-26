@@ -7,17 +7,17 @@ import PortfolioAddTokens from './PortfolioAddTokens';
 import { ethers } from "ethers";
 
 const listTokensOfOwner = require("./erc-721")
+const baseToken  =  require('./../contracts.json')
 
-const PortfolioSetup = ({trackedAssets,walletConnected,cont,walletAddress,signer,tokenList}) => {
+const PortfolioSetup = ({cont,walletAddress,signer,tokenList}) => {
   const [addingToken,setAddingToken] = useState(false)
   const [userNFTs,setUserNFTs] = useState([{}])
   const [trackedTokens,setTrackedTokens] = useState([{}])
   const [tokenID,setTokenID] = useState([])
-  const baseToken  =  require('./../contracts.json')
   
   // TODO 
   // add token to nft 
-  // then update the NFTtokenlist from portfoliousertokenslist
+  // add listener from addTokens when new tokens are added 
   // remove token from list
   // get the balance of the tokens
 
@@ -59,7 +59,6 @@ const PortfolioSetup = ({trackedAssets,walletConnected,cont,walletAddress,signer
       tempTrackedTokens[i] = searchToken(trackedTokens[i])
     }
     setTrackedTokens(tempTrackedTokens)
-    //setTrackedTokenAddresses(trackedTokens)
   }
 
   const searchToken = (address) => {
@@ -67,7 +66,7 @@ const PortfolioSetup = ({trackedAssets,walletConnected,cont,walletAddress,signer
     let fetchToken = {}
     for (let i = 0;i < tokenLength; i++){
       if (tokenList.tokens[i].address.toUpperCase() === address.toUpperCase()) {
-        fetchToken = {symbol:tokenList.tokens[i].symbol.toUpperCase(),logo:tokenList.tokens[i].logoURI}
+        fetchToken = {symbol:tokenList.tokens[i].symbol.toUpperCase(),logo:tokenList.tokens[i].logoURI,address:tokenList.tokens[i].address}
         break 
       }
     }
@@ -75,45 +74,13 @@ const PortfolioSetup = ({trackedAssets,walletConnected,cont,walletAddress,signer
   }
 
   const getBalance = async () => {
-    let minABI = [
-      // balanceOf
-      {
-        "constant":true,
-        "inputs":[{"name":"_owner","type":"address"}],
-        "name":"balanceOf",
-        "outputs":[{"name":"balance","type":"uint256"}],
-        "type":"function"
-      },
-      // decimals
-      {
-        "constant":true,
-        "inputs":[],
-        "name":"decimals",
-        "outputs":[{"name":"","type":"uint8"}],
-        "type":"function"
-      }
-    ];
     let contract = new ethers.Contract(baseToken.BaseToken.abi).at("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2");
     const balance = await contract.balanceOf(walletAddress)
     return balance
   }
 
-  // remove this and make this a trigger to get the tokens for NFT "getTrackedTokens" when they are confimed on portfolioaddtokens
-  const addNewToken = async (childData) => {
-    for (let i=0; i<childData.length;i++) {
-      setTrackedTokens((prevTokens)=>[
-        ...prevTokens,childData[i] 
-      ]) 
-    }
-  }
-
-  const checkTokens = () => {
-    console.log(trackedTokens)
-  }
-
   return (
     <div>
-      <button onClick={checkTokens}></button>
       {!userNFTs ? <></>: <>
         <div className="break"></div>
         <h2>Setup</h2>
@@ -160,7 +127,7 @@ const PortfolioSetup = ({trackedAssets,walletConnected,cont,walletAddress,signer
               </div>
             </div>
           </div>
-          <PortfolioAddTokens tokenList={tokenList} addNewToken={addNewToken} signer={signer} walletAddress={walletAddress} cont={cont}/>
+          <PortfolioAddTokens tokenList={tokenList} signer={signer} walletAddress={walletAddress} cont={cont}/>
         </>}
       </>}
     </div>
