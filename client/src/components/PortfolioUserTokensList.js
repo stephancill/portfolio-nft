@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react"
 import {IoIosRemoveCircle} from 'react-icons/io'
+import { ethers } from "ethers";
 import "./portfolioSetup.css"
-import { ethers } from "ethers"
 
 const PortfolioUserTokensList = ({signer,walletAddress,cont, setShouldFetchUpdatedSVG,trackedAssets}) => {
   const [tokens,setTokens] = useState(trackedAssets)
   const [removeUserTokens,setRemoveUserTokens] = useState([])
   const [removeUserTokensAdrresses,setRemoveUserTokensAdrresses] = useState([])
-
+  
   useEffect( async() => {
     if (trackedAssets) {
       setTokens(trackedAssets)
@@ -58,7 +58,6 @@ const PortfolioUserTokensList = ({signer,walletAddress,cont, setShouldFetchUpdat
     r1.style.display = "none"
     r2.style.display = "block"
   }
-
   const showItem = (i) => {
     let r1 = document.getElementById("remove"+i)
     let r2 = document.getElementById("remove1"+i)

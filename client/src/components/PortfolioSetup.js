@@ -64,28 +64,32 @@ const PortfolioSetup = ({cont,walletAddress,signer,tokenList}) => {
     const trackedTokens = await portfolioNFT.getTokenAddresses(clickedToken)
     let tempTrackedTokens = [] 
     for (let i=0; i<trackedTokens.length; i++) {
-      tempTrackedTokens[i] = searchToken(trackedTokens[i])
+      tempTrackedTokens[i] = await searchToken(trackedTokens[i])
     }
     setTrackedTokens(tempTrackedTokens)
   }
 
-  const searchToken = (address) => {
+  const searchToken =  async (address) => {
     const tokenLength = tokenList.tokens.length
     let fetchToken = {}
     for (let i = 0;i < tokenLength; i++){
       if (tokenList.tokens[i].address.toUpperCase() === address.toUpperCase()) {
-        fetchToken = {symbol:tokenList.tokens[i].symbol.toUpperCase(),logo:tokenList.tokens[i].logoURI,address:tokenList.tokens[i].address}
+        fetchToken = {symbol:tokenList.tokens[i].symbol.toUpperCase(),logo:tokenList.tokens[i].logoURI,address:tokenList.tokens[i].address,balance:await getBalance(tokenList.tokens[i].address)}
         break 
       }
     }
     return(fetchToken)  
   }
 
-  const getBalance = async () => {
-    let contract = new ethers.Contract(baseToken.BaseToken.abi).at("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2");
+  // GET TOKEN BALANCE not working 
+  const getBalance = async (address) => {
+    console.log(baseToken.contracts.BaseToken.abi)
+    let contract = new ethers.Contract(baseToken.contracts.BaseToken.abi).at(address);
     const balance = await contract.balanceOf(walletAddress)
+    console.log(balance)
     return balance
   }
+
 
   return (
     <div>

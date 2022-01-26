@@ -50,8 +50,8 @@ const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont, setShouldFetch
     const deployment = await cont.contracts.PortfolioNFT
     const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, signer)
     let tokenAddresss = userTokens.map(token => token.address)
-    let tokenPricePaths = userTokens.map(i => [])
-    
+    let tokenPricePaths = userTokens.map(i => []) // TODO: Get price path
+    // TODO: ADD THE USERS SELECTED TOKEN, dont hard code it 
     const tx = await portfolioNFT.connect(signer).trackTokens(1,tokenAddresss,tokenPricePaths)
     const txInfo = await tx.wait()
     console.log(txInfo)
