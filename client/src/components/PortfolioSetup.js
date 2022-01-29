@@ -93,7 +93,7 @@ const PortfolioSetup = ({cont,walletAddress,signer,tokenList}) => {
   }
   
 
-
+  //TODO : Dont shoe setup when there isnt any nfts
   return (
     <div>
       {!userNFTs ? <></>: <>
@@ -127,7 +127,7 @@ const PortfolioSetup = ({cont,walletAddress,signer,tokenList}) => {
                 </div>
               </div>
             </div>
-            <PortfolioUserTokensList trackedAssets={trackedTokens} signer={signer} walletAddress={walletAddress} cont={cont} setShouldFetchUpdatedSVG={setShouldFetchUpdatedSVG}  selectedNFTToken={selectedNFTToken}/>
+            <PortfolioUserTokensList trackedAssets={trackedTokens} signer={signer} walletAddress={walletAddress} cont={cont} setShouldFetchUpdatedSVG={setShouldFetchUpdatedSVG}  selectedNFTToken={selectedNFTToken} getTrackedTokens={getTrackedTokens}/>
           </> : <></>}
         </> : <>
           <div className="backConatiner" style={{marginBottom:"5px"}}>

@@ -3,7 +3,7 @@ import {IoIosRemoveCircle} from 'react-icons/io'
 import { ethers } from "ethers";
 import "./portfolioSetup.css"
 
-const PortfolioUserTokensList = ({signer,walletAddress,cont, setShouldFetchUpdatedSVG,trackedAssets,selectedNFTToken}) => {
+const PortfolioUserTokensList = ({signer,walletAddress,cont, setShouldFetchUpdatedSVG,trackedAssets,selectedNFTToken,getTrackedTokens}) => {
   const [tokens,setTokens] = useState(trackedAssets)
   const [removeUserTokens,setRemoveUserTokens] = useState([])
   const [removeUserTokensAdrresses,setRemoveUserTokensAdrresses] = useState([])
@@ -41,6 +41,12 @@ const PortfolioUserTokensList = ({signer,walletAddress,cont, setShouldFetchUpdat
     setRemoveUserTokensAdrresses(removeUserTokensAdrresses.filter(item => item !== removeUserTokensAdrresses[i]))
   }
 
+  const resetRemoveTokenList = () => {
+    let tempArr = []
+    setRemoveUserTokens(tempArr);
+    setRemoveUserTokensAdrresses(tempArr)
+  }
+
   const removeTokens = async () => {
     console.log(removeUserTokens)
     const deployment = await cont.contracts.PortfolioNFT
@@ -48,7 +54,12 @@ const PortfolioUserTokensList = ({signer,walletAddress,cont, setShouldFetchUpdat
     let tokenAddresss = removeUserTokens.map(token => token.address)
     const tx = await portfolioNFT.connect(signer).removeTokens(selectedNFTToken,tokenAddresss)
     const txInfo = await tx.wait()
-    console.log(txInfo)
+    console.log(txInfo.status)
+    if (txInfo.status=1) {
+      resetRemoveTokenList()
+      //TODO: Check if this works
+      getTrackedTokens(selectedNFTToken)
+    }
     setShouldFetchUpdatedSVG(true)
   }
 
@@ -83,18 +94,14 @@ const PortfolioUserTokensList = ({signer,walletAddress,cont, setShouldFetchUpdat
               onMouseLeave={() => showItem(i)}
             >
               <div>
-                <div className="tokenIcon"></div>
+                <img className="tokenIcon" src={token.logo}></img>
               </div>
               <div style={{marginLeft:"15px"}}>
                 <h3 style={{margin:"0px",marginTop:"-2px"}}>{token.symbol}</h3>
                 <h4 style={{margin:"0px",textAlign:"left"}} >{token.balance}</h4>
               </div>
               <div className="col">
-                {tokens.symbol!="WETH" ? <>
-                  <h3 style={{textAlign:"right", marginTop:"-0px"}}>
-                    30340
-                  </h3>
-                </>:<>
+                {token.symbol!="WETH" ? <>
                   <div id={"remove"+i}>
                     <h3 style={{textAlign:"right", marginTop:"-0px"}}>
                       30340
@@ -106,6 +113,10 @@ const PortfolioUserTokensList = ({signer,walletAddress,cont, setShouldFetchUpdat
                       <IoIosRemoveCircle className="innerRowIcon"></IoIosRemoveCircle>
                     </button>
                   </div>
+                  </>:<>
+                  <h3 style={{textAlign:"right", marginTop:"-0px"}}>
+                    30340
+                  </h3>
                 </>}
               </div>
             </div>
