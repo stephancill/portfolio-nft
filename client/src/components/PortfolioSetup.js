@@ -15,6 +15,8 @@ const PortfolioSetup = ({cont,walletAddress,signer,tokenList}) => {
   const [trackedTokens,setTrackedTokens] = useState([{}])
   const [tokenID,setTokenID] = useState([])
   const [shouldFetchUpdatedSVG, setShouldFetchUpdatedSVG] = useState(false)
+  const [selectedNFTToken, setSelectedNFTToken] = useState(null)
+
   
   // TODO 
   // add token to nft 
@@ -52,13 +54,14 @@ const PortfolioSetup = ({cont,walletAddress,signer,tokenList}) => {
     const tempNFTsvgs = []
     let tokenIDs = Array.from(tokens);
     setTokenID(tokenIDs)
-    for (let i=0;i<tokens.size;i++) {  
+    for (let i=0;i<tokens.size;i++) { 
       tempNFTsvgs[i] = await getNFT(tokenIDs[i])
     }
     setUserNFTs(tempNFTsvgs)
   }
   
   const getTrackedTokens = async (clickedToken) => {
+    setSelectedNFTToken(clickedToken)
     const deployment = await cont.contracts.PortfolioNFT
     const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi,signer)
     const trackedTokens = await portfolioNFT.getTokenAddresses(clickedToken)
@@ -66,6 +69,7 @@ const PortfolioSetup = ({cont,walletAddress,signer,tokenList}) => {
     for (let i=0; i<trackedTokens.length; i++) {
       tempTrackedTokens[i] = await searchToken(trackedTokens[i])
     }
+    console.log(tempTrackedTokens)
     setTrackedTokens(tempTrackedTokens)
   }
 
@@ -81,14 +85,13 @@ const PortfolioSetup = ({cont,walletAddress,signer,tokenList}) => {
     return(fetchToken)  
   }
 
-  // GET TOKEN BALANCE not working 
   const getBalance = async (address) => {
-    console.log(baseToken.contracts.BaseToken.abi)
-    let contract = new ethers.Contract(baseToken.contracts.BaseToken.abi).at(address);
-    const balance = await contract.balanceOf(walletAddress)
-    console.log(balance)
-    return balance
+    //console.log(baseToken.contracts.BaseToken.abi)
+    //let contract = new ethers.Contract(baseToken.contracts.BaseToken.abi).at(address);
+    //const balance = await contract.balanceOf(walletAddress)
+    return 1
   }
+  
 
 
   return (
@@ -109,21 +112,23 @@ const PortfolioSetup = ({cont,walletAddress,signer,tokenList}) => {
           ))}
         </div>
         {!addingToken ? <>
-          <div className='titleBtnBar'>
-            <div>
-              <h3 style={{display:"flex",margin:"0px"}}>Wallet 202322</h3>
-              <div className='priceText'>$200,320,234</div>
-            </div>
-            <div className='titleBtnBarRight'>
+          {selectedNFTToken ? <>
+            <div className='titleBtnBar'>
               <div>
-                <button className="pageBtn" onClick={back} style={{width:"130px"}}>
-                  Add Token
-                  <IoIosAddCircle className="innerRowIcon"></IoIosAddCircle>
-                </button>
+                <h3 style={{display:"flex",margin:"0px"}}>Wallet No {selectedNFTToken}</h3>
+                <div className='priceText'>$200,320,234</div>
+              </div>
+              <div className='titleBtnBarRight'>
+                <div>
+                  <button className="pageBtn" onClick={back} style={{width:"130px"}}>
+                    Add Token
+                    <IoIosAddCircle className="innerRowIcon"></IoIosAddCircle>
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-          <PortfolioUserTokensList trackedAssets={trackedTokens} signer={signer} walletAddress={walletAddress} cont={cont} setShouldFetchUpdatedSVG={setShouldFetchUpdatedSVG} />
+            <PortfolioUserTokensList trackedAssets={trackedTokens} signer={signer} walletAddress={walletAddress} cont={cont} setShouldFetchUpdatedSVG={setShouldFetchUpdatedSVG}  selectedNFTToken={selectedNFTToken}/>
+          </> : <></>}
         </> : <>
           <div className="backConatiner" style={{marginBottom:"5px"}}>
             <div className='titleBtnBar'>
@@ -139,7 +144,7 @@ const PortfolioSetup = ({cont,walletAddress,signer,tokenList}) => {
               </div>
             </div>
           </div>
-          <PortfolioAddTokens tokenList={tokenList} signer={signer} walletAddress={walletAddress} cont={cont} setShouldFetchUpdatedSVG={setShouldFetchUpdatedSVG}/>
+          <PortfolioAddTokens tokenList={tokenList} signer={signer} walletAddress={walletAddress} cont={cont} setShouldFetchUpdatedSVG={setShouldFetchUpdatedSVG} selectedNFTToken={selectedNFTToken}/>
         </>}
       </>}
     </div>

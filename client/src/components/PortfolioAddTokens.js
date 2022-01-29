@@ -4,7 +4,7 @@ import {IoIosAddCircle,IoIosRemoveCircle} from 'react-icons/io'
 import "./portfolioSetup.css"
 import { ethers } from "ethers";
 
-const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont, setShouldFetchUpdatedSVG}) => {
+const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont, setShouldFetchUpdatedSVG,selectedNFTToken}) => {
   const [tokens,setTokens] = useState([{}])
   const [userTokens,setUserTokens] = useState([])
 
@@ -27,6 +27,7 @@ const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont, setShouldFetch
       }
     }
     setTokens(showTokens)
+    console.log(showTokens)
   }
 
   const addUserToken = (a) => {
@@ -52,7 +53,7 @@ const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont, setShouldFetch
     let tokenAddresss = userTokens.map(token => token.address)
     let tokenPricePaths = userTokens.map(i => []) // TODO: Get price path
     // TODO: ADD THE USERS SELECTED TOKEN, dont hard code it 
-    const tx = await portfolioNFT.connect(signer).trackTokens(1,tokenAddresss,tokenPricePaths)
+    const tx = await portfolioNFT.connect(signer).trackTokens(selectedNFTToken,tokenAddresss,tokenPricePaths)
     const txInfo = await tx.wait()
     console.log(txInfo)
     setShouldFetchUpdatedSVG(true)
@@ -83,7 +84,7 @@ const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont, setShouldFetch
     <div>
       <input placeholder="Search a name, address or symbol" onChange={e => searchToken(e.target.value)}></input>
         <div className="b2" style={{marginTop:"-10px"}}>
-        {(tokens.length > 10 ? [] : tokens).map((token, i) => ( <>
+        {(tokens.length<0 ? [] : tokens).map((token, i) => ( <>
             <div className="row" key={i} id={i}
             onMouseEnter={() => showItem(i)}
             onMouseLeave={() => hideItem(i)} >

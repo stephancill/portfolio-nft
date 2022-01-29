@@ -3,7 +3,7 @@ import {IoIosRemoveCircle} from 'react-icons/io'
 import { ethers } from "ethers";
 import "./portfolioSetup.css"
 
-const PortfolioUserTokensList = ({signer,walletAddress,cont, setShouldFetchUpdatedSVG,trackedAssets}) => {
+const PortfolioUserTokensList = ({signer,walletAddress,cont, setShouldFetchUpdatedSVG,trackedAssets,selectedNFTToken}) => {
   const [tokens,setTokens] = useState(trackedAssets)
   const [removeUserTokens,setRemoveUserTokens] = useState([])
   const [removeUserTokensAdrresses,setRemoveUserTokensAdrresses] = useState([])
@@ -46,7 +46,7 @@ const PortfolioUserTokensList = ({signer,walletAddress,cont, setShouldFetchUpdat
     const deployment = await cont.contracts.PortfolioNFT
     const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, signer)
     let tokenAddresss = removeUserTokens.map(token => token.address)
-    const tx = await portfolioNFT.connect(signer).removeTokens(1,tokenAddresss)
+    const tx = await portfolioNFT.connect(signer).removeTokens(selectedNFTToken,tokenAddresss)
     const txInfo = await tx.wait()
     console.log(txInfo)
     setShouldFetchUpdatedSVG(true)
@@ -90,17 +90,23 @@ const PortfolioUserTokensList = ({signer,walletAddress,cont, setShouldFetchUpdat
                 <h4 style={{margin:"0px",textAlign:"left"}} >{token.balance}</h4>
               </div>
               <div className="col">
-                <div id={"remove"+i}>
+                {tokens.symbol!="WETH" ? <>
                   <h3 style={{textAlign:"right", marginTop:"-0px"}}>
                     30340
                   </h3>
-                </div>
-                <div id={"remove1"+i} style={{display:"none"}} >
-                  <button className="innerRowBtn" name={token.symbol} onClick={()=>removeToken(i)} style={{width:"110px"}}>
-                    Remove
-                    <IoIosRemoveCircle className="innerRowIcon"></IoIosRemoveCircle>
-                  </button>
-                </div>
+                </>:<>
+                  <div id={"remove"+i}>
+                    <h3 style={{textAlign:"right", marginTop:"-0px"}}>
+                      30340
+                    </h3>
+                  </div>
+                  <div id={"remove1"+i} style={{display:"none"}} >
+                    <button className="innerRowBtn" name={token.symbol} onClick={()=>removeToken(i)} style={{width:"110px"}}>
+                      Remove
+                      <IoIosRemoveCircle className="innerRowIcon"></IoIosRemoveCircle>
+                    </button>
+                  </div>
+                </>}
               </div>
             </div>
             </>
