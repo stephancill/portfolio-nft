@@ -57,7 +57,6 @@ const PortfolioUserTokensList = ({signer,walletAddress,cont, setShouldFetchUpdat
     console.log(txInfo.status)
     if (txInfo.status=1) {
       resetRemoveTokenList()
-      //TODO: Check if this works
       getTrackedTokens(selectedNFTToken)
     }
     setShouldFetchUpdatedSVG(true)

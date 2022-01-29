@@ -144,7 +144,7 @@ const PortfolioSetup = ({cont,walletAddress,signer,tokenList}) => {
               </div>
             </div>
           </div>
-          <PortfolioAddTokens tokenList={tokenList} signer={signer} walletAddress={walletAddress} cont={cont} setShouldFetchUpdatedSVG={setShouldFetchUpdatedSVG} selectedNFTToken={selectedNFTToken}/>
+          <PortfolioAddTokens tokenList={tokenList} signer={signer} walletAddress={walletAddress} cont={cont} setShouldFetchUpdatedSVG={setShouldFetchUpdatedSVG} selectedNFTToken={selectedNFTToken} getTrackedTokens={getTrackedTokens} trackedTokens={trackedTokens}/>
         </>}
       </>}
     </div>

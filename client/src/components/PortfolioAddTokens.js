@@ -4,7 +4,7 @@ import {IoIosAddCircle,IoIosRemoveCircle} from 'react-icons/io'
 import "./portfolioSetup.css"
 import { ethers } from "ethers";
 
-const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont, setShouldFetchUpdatedSVG,selectedNFTToken}) => {
+const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont, setShouldFetchUpdatedSVG,selectedNFTToken,getTrackedTokens,trackedTokens}) => {
   const [tokens,setTokens] = useState([{}])
   const [userTokens,setUserTokens] = useState([])
 
@@ -16,18 +16,27 @@ const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont, setShouldFetch
   },[])
 
   const searchToken = (value) => {
+    console.log("S")
+    console.log(trackedTokens)
     const tokenLength = tokenList.tokens.length
     const valueLenth = value.length
     let showTokens = [{}]
     let a = 0
     for (let i = 0;i < tokenLength; i++){
-      if (tokenList.tokens[i].symbol.substring(0,valueLenth).toUpperCase() === value.toUpperCase()) {
-        showTokens[a] = {symbol:tokenList.tokens[i].symbol.toUpperCase(),logo:tokenList.tokens[i].logoURI,address:tokenList.tokens[i].address}
-        a=a+1
+      let onUserList = false
+      for (let k=0;k<trackedTokens.length;k++) {
+        if ((trackedTokens[k].symbol==tokenList.tokens[i].symbol)) {
+          onUserList=true
+        }
+      }
+      if (!onUserList) {
+        if (tokenList.tokens[i].symbol.substring(0,valueLenth).toUpperCase() === value.toUpperCase()) {
+          showTokens[a] = {symbol:tokenList.tokens[i].symbol.toUpperCase(),logo:tokenList.tokens[i].logoURI,address:tokenList.tokens[i].address} 
+          a=a+1
+        }
       }
     }
     setTokens(showTokens)
-    console.log(showTokens)
   }
 
   const addUserToken = (a) => {
@@ -54,8 +63,16 @@ const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont, setShouldFetch
     let tokenPricePaths = userTokens.map(i => []) // TODO: Get price path
     const tx = await portfolioNFT.connect(signer).trackTokens(selectedNFTToken,tokenAddresss,tokenPricePaths)
     const txInfo = await tx.wait()
-    console.log(txInfo)
+    if (txInfo.status=1) {
+      getTrackedTokens(selectedNFTToken)
+      resetAddTokenList()
+    }
     setShouldFetchUpdatedSVG(true)
+  }
+
+  const resetAddTokenList = () => {
+    let tempArr = []
+    setUserTokens(tempArr);
   }
   
   const removeUserList = (a)=> {
