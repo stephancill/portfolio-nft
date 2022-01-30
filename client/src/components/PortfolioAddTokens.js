@@ -100,7 +100,7 @@ const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont, setShouldFetch
     <div>
       <input placeholder="Search a name, address or symbol" onChange={e => searchToken(e.target.value)}></input>
         <div className="b2" style={{marginTop:"-10px"}}>
-        {(tokens.length<0 ? [] : tokens).map((token, i) => ( <>
+        {(tokens.length > 10 ? [] : tokens).map((token, i) => ( <>
             <div className="row" key={i} id={i}
             onMouseEnter={() => showItem(i)}
             onMouseLeave={() => hideItem(i)} >

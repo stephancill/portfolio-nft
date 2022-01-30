@@ -87,8 +87,8 @@ const PortfolioUserTokensList = ({signer,walletAddress,cont, setShouldFetchUpdat
     <div>
       {tokens[0].symbol ? <>
         <div className="b2">
-          {tokens.map((token, i) => ( <>
-            <div className="row" key={i} id={i} 
+          {tokens.map((token, i) => ( <div key={i} >
+            <div className="row" id={i} 
               onMouseEnter={() => hideItem(i)}
               onMouseLeave={() => showItem(i)}
             >
@@ -119,7 +119,7 @@ const PortfolioUserTokensList = ({signer,walletAddress,cont, setShouldFetchUpdat
                 </>}
               </div>
             </div>
-            </>
+            </div>
           ))}
         </div>
         </> : <>
@@ -128,8 +128,8 @@ const PortfolioUserTokensList = ({signer,walletAddress,cont, setShouldFetchUpdat
         {removeUserTokens.length ? <>
         <h3 style={{marginBottom:"10px"}}>Your Tokens To Remove</h3>
         <div className="b2">
-        {removeUserTokens.map((token, i) => ( <>
-            <div className="row" key={i} id={i}
+        {removeUserTokens.map((token, i) => ( <div key={i} >
+            <div className="row" id={i}
             onMouseEnter={() => showItemList(i)}
             onMouseLeave={() => hideItemList(i)} >
                 <img className="tokenIcon" src={token.logo}></img>
@@ -145,7 +145,7 @@ const PortfolioUserTokensList = ({signer,walletAddress,cont, setShouldFetchUpdat
                 </div>
               </div>
             </div>
-            </>
+            </div>
           ))}
         </div>
         <button onClick={()=>{removeTokens()}} style={{marginTop:"30px"}}>Remove Tokens</button>

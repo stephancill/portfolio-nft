@@ -25,7 +25,8 @@ const PortfolioSetup = ({cont,walletAddress,signer,tokenList}) => {
   // get the balance of the tokens
 
   useEffect( async() => {
-    getUsersNFTTokens()
+    if (walletAddress)
+      getUsersNFTTokens()
   }, [tokenList])
 
   useEffect(() => {
@@ -78,18 +79,18 @@ const PortfolioSetup = ({cont,walletAddress,signer,tokenList}) => {
     let fetchToken = {}
     for (let i = 0;i < tokenLength; i++){
       if (tokenList.tokens[i].address.toUpperCase() === address.toUpperCase()) {
-        fetchToken = {symbol:tokenList.tokens[i].symbol.toUpperCase(),logo:tokenList.tokens[i].logoURI,address:tokenList.tokens[i].address,balance:await getBalance(tokenList.tokens[i].address)}
+        const token = tokenList.tokens[i]
+        fetchToken = {symbol:token.symbol.toUpperCase(),logo:token.logoURI,address:token.address,balance:await getBalance(token.address, token.decimals)}
         break 
       }
     }
     return(fetchToken)  
   }
 
-  const getBalance = async (address) => {
-    //console.log(baseToken.contracts.BaseToken.abi)
-    //let contract = new ethers.Contract(baseToken.contracts.BaseToken.abi).at(address);
-    //const balance = await contract.balanceOf(walletAddress)
-    return 1
+  const getBalance = async (address, decimals) => {
+    const contract = new ethers.Contract(address, baseToken.contracts.BaseToken.abi, signer)
+    const balance = await contract.balanceOf(walletAddress)
+    return ethers.utils.formatUnits(balance, decimals)
   }
   
 
@@ -101,14 +102,14 @@ const PortfolioSetup = ({cont,walletAddress,signer,tokenList}) => {
         <h2>Setup</h2>
         <h3 style={{marginTop:"10px"}}>Select a portfolio to configure.</h3>
         <div className='NFTcontainer'>
-        {userNFTs.map((NFT, i) => ( <>
+        {userNFTs.map((NFT, i) => ( <div key={i}>
             <button className="NFTBtn" id={"nft"+i} onClick={()=>{getTrackedTokens(tokenID[i])}}>
               <img src={NFT.svg} style={{width:"328px"}}></img>
             </button>
             {(userNFTs.length!=i+1) && 
               <div  style={{height:"10px",width:"100%"}}></div>
             }
-          </>
+          </div>
           ))}
         </div>
         {!addingToken ? <>
