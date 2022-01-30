@@ -16,7 +16,8 @@
     "react-scripts": "5.0.0",
     "react-slideshow-image": "^3.6.1",
     "react-transition-group": "^4.4.2",
-    "web-vitals": "^2.1.2"
+    "web-vitals": "^2.1.2",
+    "lens-tasks": "file:./../tasks"
   },
   "scripts": {
     "start": "react-scripts start",
