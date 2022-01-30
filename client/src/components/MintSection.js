@@ -2,7 +2,7 @@ import PercentageSold from "./PercentageSold"
 import "./mintSection.css"
 import { ethers } from "ethers";
 
-const MintSection = ({amountMinted,cont,address,signer}) => {
+const MintSection = ({amountMinted,cont,address,signer,refreshUserNFTs}) => {
   const mintNFT = async ()=> {
     const deployment = cont.contracts.PortfolioNFT
     const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, signer)
@@ -11,6 +11,9 @@ const MintSection = ({amountMinted,cont,address,signer}) => {
     const txInfo = await tx.wait()
     const tokenId = txInfo.events[0].args.tokenId.toString()
     console.log("Minted", {tokenId})
+    if (txInfo.status=1) {
+      refreshUserNFTs()
+    }
   }
   
   return (
