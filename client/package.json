@@ -15,7 +15,8 @@
     "react-icons": "^4.3.1",
     "react-scripts": "5.0.0",
     "react-transition-group": "^4.4.2",
-    "web-vitals": "^2.1.2"
+    "web-vitals": "^2.1.2",
+    "lens-tasks": "file:./../tasks"
   },
   "scripts": {
     "start": "react-scripts start",

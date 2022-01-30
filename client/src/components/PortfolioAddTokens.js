@@ -3,10 +3,14 @@ import {IoIosAddCircle,IoIosRemoveCircle} from 'react-icons/io'
 import { useAlert } from 'react-alert'
 import "./portfolioSetup.css"
 import { ethers } from "ethers";
+import { getPathsDetail } from "lens-tasks/portfolio-nft"
 
 const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont, setShouldFetchUpdatedSVG,selectedNFTToken,getTrackedTokens,trackedTokens}) => {
   const [tokens,setTokens] = useState([{}])
   const [userTokens,setUserTokens] = useState([])
+  const [allPricePaths, setAllPricePaths] = useState({})
+  const [selectedPricePaths, setSelectedPricePaths] = useState({})
+  const [baseTokenAddress, setBaseTokenAddress] = useState(undefined)
   const alert = useAlert()
 
   useEffect(async()=>{
@@ -17,8 +21,6 @@ const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont, setShouldFetch
   },[])
 
   const searchToken = (value) => {
-    console.log("S")
-    console.log(trackedTokens)
     const tokenLength = tokenList.tokens.length
     const valueLenth = value.length
     let showTokens = [{}]
@@ -52,16 +54,74 @@ const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont, setShouldFetch
     } else {
       foundDuplicate = true
     }
+
     if(foundDuplicate==false){
-      setUserTokens(userTokens => [...userTokens, tokens[a]]);
+      const newToken = tokens[a]
+      setUserTokens(userTokens => [...userTokens, newToken]);
+      // Get price path
+      const _newPricePaths = {...allPricePaths}
+      _newPricePaths[newToken.address.toLowerCase()] = null
+      setAllPricePaths(_newPricePaths);
+      (async () => {
+        let baseTokens = tokenList.tokens.filter(function (t) {
+          return ['DAI', 'USDC', 'USDT', 'FRAX', 'ETH'].includes(t.symbol)
+        }).map((el) => {
+          return el.address
+        }) 
+        const portfolioNFTDeployment = cont.contracts.PortfolioNFT
+        const portfolioNFT = new ethers.Contract(portfolioNFTDeployment.address, portfolioNFTDeployment.abi, signer)
+        let _baseTokenAddress = baseTokenAddress 
+        if (!_baseTokenAddress) {
+          _baseTokenAddress = await portfolioNFT.baseTokenAddress()
+          setBaseTokenAddress(_baseTokenAddress)
+        }
+      
+
+        let pathsDetail = await getPathsDetail({
+          tokenIn: newToken.address, 
+          tokenOut: _baseTokenAddress, 
+          baseTokens: baseTokens, 
+          pairFactoryAddress: cont.contracts.UniswapV2Factory.address, 
+          provider: signer.provider
+        })
+        const poolMemo = {}
+        pathsDetail = pathsDetail.map(path => {
+          return path.map(pool => {
+            ["tokenIn", "tokenOut"].map(tokenKey => {
+              if (pool[tokenKey].toLowerCase() in poolMemo) {
+                pool[tokenKey] = poolMemo[pool[tokenKey]]
+              } else {
+                let token = tokenList.tokens.find(item => item.address.toLowerCase() == pool[tokenKey].toLowerCase())
+                if (!token) {
+                  const contract = new ethers.Contract(pool[tokenKey], cont.contracts.BaseToken.abi, signer)
+                  const symbol = `(${pool[tokenKey]})` // TODO: Get symbol
+                  token = {address: pool[tokenKey], symbol}
+                }
+                poolMemo[pool[tokenKey]] = token
+                pool[tokenKey] = token
+              }
+            })
+            return pool
+          })
+        })
+        const newPricePaths = {...allPricePaths}
+        newPricePaths[newToken.address.toLowerCase()] = pathsDetail
+        setAllPricePaths(newPricePaths)
+      })()
     }
   }
 
+  const setSelectedPathForToken = (tokenAddress, pricePath) => {
+    const newSelectedPricePaths = {...selectedPricePaths}
+    newSelectedPricePaths[tokenAddress] = pricePath
+    setSelectedPricePaths(newSelectedPricePaths)
+  }
+
   const updateTokens = async () => {
-    const deployment = await cont.contracts.PortfolioNFT
+    const deployment = cont.contracts.PortfolioNFT
     const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, signer)
     let tokenAddresss = userTokens.map(token => token.address)
-    let tokenPricePaths = userTokens.map(i => []) // TODO: Get price path
+    let tokenPricePaths = userTokens.map(token => selectedPricePaths[token.address.toLowerCase()]) 
     const tx = await portfolioNFT.connect(signer).trackTokens(selectedNFTToken,tokenAddresss,tokenPricePaths)
     const txInfo = await tx.wait()
     if (txInfo.status=1) {
@@ -148,9 +208,17 @@ const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont, setShouldFetch
                 </div>
                 <div style={{display:"flex",marginTop:"5px"}}>
                   <select className="pathSelect">
-                    <option disabled value="select" selected>Select Price Path</option>
-                    <option >Polygon</option>
-                    <option >Ethereum</option>
+                    <option disabled value="select" selected>{
+                    allPricePaths[token.address.toLowerCase()] === null ? "Loading price paths" : "Select a price path"
+                    }</option>
+
+                    {allPricePaths[token.address.toLowerCase()] && allPricePaths[token.address.toLowerCase()].length > 0 ? 
+                    allPricePaths[token.address.toLowerCase()].map((pricePath, index) => {
+                      return (
+                      <option onClick={() => setSelectedPathForToken(token.address, pricePath.map(pool => pool.poolAddress))} key={index}>
+                        {[...pricePath.map(pool => pool.tokenIn.symbol), pricePath[pricePath.length-1].tokenOut.symbol].join(" -> ")}
+                      </option>)
+                    }) : allPricePaths[token.address.toLowerCase()] !== undefined ? "Loading..." : <></>}
                   </select>
                 </div>
               </div>
