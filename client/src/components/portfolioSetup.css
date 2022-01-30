@@ -75,6 +75,18 @@ input:focus {
   border-radius: 5px;
   padding-left: 5px;
 }
+.rowAddToken {
+  display: flex;
+  border: 1px solid rgb(75, 75, 75);
+  border-radius: 5px;
+  margin-bottom: 10px;
+  padding: 5px;
+  transition: ease-in-out 0.25s;
+  height: 71px;
+}
+.rowAddToken:hover {
+  background: linear-gradient(90deg, #1e1e1e 0%, #212121 100%);
+}
 .col {
   flex: 50%;
   height: 35px;
@@ -140,4 +152,11 @@ input:focus {
   text-align: left;
   padding-top: 5px;
   padding-bottom: 15px;
+}
+.pathSelect {
+  background: #ab78c5;
+  border: 1px solid #ab78c5;
+  border-radius: 5px;
+  height: 30px;
+  width: 100%;
 }

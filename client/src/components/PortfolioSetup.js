@@ -118,8 +118,7 @@ const PortfolioSetup = ({cont,walletAddress,signer,tokenList,refreshUserNFT,rese
           {selectedNFTToken ? <>
             <div className='titleBtnBar'>
               <div>
-                <h3 style={{display:"flex",margin:"0px"}}>Wallet No {selectedNFTToken}</h3>
-                <div className='priceText'>$200,320,234</div>
+                <div className='priceText'>Wallet No {selectedNFTToken}</div>
               </div>
               <div className='titleBtnBarRight'>
                 <div>
@@ -136,7 +135,7 @@ const PortfolioSetup = ({cont,walletAddress,signer,tokenList,refreshUserNFT,rese
           <div className="backConatiner" style={{marginBottom:"5px"}}>
             <div className='titleBtnBar'>
               <div>
-                <h3 style={{display:"flex",marginTop:"5px"}}>Select A Token</h3>
+                <h3 style={{display:"flex",marginTop:"5px"}}>Select Tokens To Add</h3>
               </div>
               <div className='titleBtnBarRight'>
                 <div>

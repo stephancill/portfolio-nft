@@ -124,19 +124,30 @@ const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont, setShouldFetch
         <h3 style={{marginBottom:"10px"}}>Your Tokens To Add</h3>
         <div className="b2">
         {userTokens.map((token, i) => ( <>
-            <div className="row" key={i} id={i}
+            <div className="rowAddToken" key={i} id={i} 
             onMouseEnter={() => showItemList(i)}
             onMouseLeave={() => hideItemList(i)} >
-                <img className="tokenIcon" src={token.logo}></img>
-              <div style={{marginLeft:"15px",height:"30px"}}>
-                <h3 style={{margin:"none",marginTop:"6px",width:"200px"}}>{token.symbol}</h3>
-              </div>
-              <div className="col">
-                <div id={"item"+i} style={{display:"none"}} >
-                  <button className=" innerRowBtn" onClick={()=>removeUserList(i)} style={{width:"100px"}}>
-                    Cancel
-                    <IoIosRemoveCircle className="innerRowIcon"></IoIosRemoveCircle>
-                  </button>
+              <div className='col'>
+                <div style={{display:"flex"}}>
+                  <img className="tokenIcon" src={token.logo}></img>
+                  <div style={{marginLeft:"15px",height:"30px"}}>
+                    <h3 style={{margin:"none",marginTop:"6px",width:"190px"}}>{token.symbol}</h3>
+                  </div>
+                  <div className="col">
+                    <div id={"item"+i} style={{display:"none"}} >
+                      <button className=" innerRowBtn" onClick={()=>removeUserList(i)} style={{width:"100px"}}>
+                        Cancel
+                        <IoIosRemoveCircle className="innerRowIcon"></IoIosRemoveCircle>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div style={{display:"flex",marginTop:"5px"}}>
+                  <select className="pathSelect">
+                    <option disabled value="select" selected>Select Price Path</option>
+                    <option >Polygon</option>
+                    <option >Ethereum</option>
+                  </select>
                 </div>
               </div>
             </div>
