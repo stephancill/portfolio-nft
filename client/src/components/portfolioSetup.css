@@ -1,9 +1,17 @@
 .NFTBtn {
   padding: 0px;
-  height: 330px;
-  width: 330px;
+  height: 350px;
+  margin-right: 20px;
   border: #fff 1px solid;
-  margin-right: 10px;
+}
+.indicators {
+  padding: none !important;
+  margin-left: -40px;
+  width: 100%;
+  margin-top: -20px;
+}
+.each-slideshow-indicator {
+  height: 0px;
 }
 .NFTBtn:hover {
   border: #c06286 1px solid;

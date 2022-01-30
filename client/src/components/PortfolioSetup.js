@@ -5,6 +5,8 @@ import {IoIosArrowBack,IoIosAddCircle} from 'react-icons/io'
 import PortfolioUserTokensList from './PortfolioUserTokensList';
 import PortfolioAddTokens from './PortfolioAddTokens';
 import { ethers } from "ethers";
+import { Slide } from 'react-slideshow-image';
+import 'react-slideshow-image/dist/styles.css'
 
 const listTokensOfOwner = require("./erc-721")
 const baseToken  =  require('./../contracts.json')
@@ -16,14 +18,6 @@ const PortfolioSetup = ({cont,walletAddress,signer,tokenList,refreshUserNFT,rese
   const [tokenID,setTokenID] = useState([])
   const [shouldFetchUpdatedSVG, setShouldFetchUpdatedSVG] = useState(false)
   const [selectedNFTToken, setSelectedNFTToken] = useState(null)
-
-  
-  // TODO 
-  // add token to nft 
-  // add listener from addTokens when new tokens are added 
-  // remove token from list
-  // get the balance of the tokens
-
 
   useEffect(async() => {
     if (walletAddress)
@@ -94,6 +88,11 @@ const PortfolioSetup = ({cont,walletAddress,signer,tokenList,refreshUserNFT,rese
     const balance = await contract.balanceOf(walletAddress)
     return ethers.utils.formatUnits(balance, decimals)
   }
+
+  const properties = {
+    autoplay: false,
+    indicators: true
+  };
   
 
   //TODO : Dont shoe setup when there isnt any nfts
@@ -101,16 +100,18 @@ const PortfolioSetup = ({cont,walletAddress,signer,tokenList,refreshUserNFT,rese
     <div>
       {!userNFTs ? <></>: <>
         <div className="break"></div>
-        <h2>Setup</h2>
+        <h2>Setup</h2>        
         <h3 style={{marginTop:"10px"}}>Select a portfolio to configure.</h3>
-        <div className='NFTcontainer'>
-        {userNFTs.map((NFT, i) => ( <div key={i}>
-            <button className="NFTBtn" id={"nft"+i} onClick={()=>{getTrackedTokens(tokenID[i])}}>
-              <img src={NFT.svg} style={{width:"328px"}}></img>
-            </button>
-          </div>
-          ))}
-        </div>
+        <Slide {...properties} style={{marginBottom:"-20px"}}>
+          {userNFTs.map((NFT, i) => ( <div key={i}>
+            <div className="each-slide" key={i}>
+              <button className="NFTBtn" id={"nft"+i} onClick={()=>{getTrackedTokens(tokenID[i])}}>
+                <img src={NFT.svg} style={{width:"348px"}}></img>
+              </button>
+              </div>
+            </div>
+            ))}
+        </Slide>
         {!addingToken ? <>
           {selectedNFTToken ? <>
             <div className='titleBtnBar'>
