@@ -2,11 +2,13 @@ import { useState, useEffect } from "react"
 import {IoIosRemoveCircle} from 'react-icons/io'
 import { ethers } from "ethers";
 import "./portfolioSetup.css"
+import { useAlert } from 'react-alert'
 
 const PortfolioUserTokensList = ({signer,walletAddress,cont, setShouldFetchUpdatedSVG,trackedAssets,selectedNFTToken,getTrackedTokens}) => {
   const [tokens,setTokens] = useState(trackedAssets)
   const [removeUserTokens,setRemoveUserTokens] = useState([])
   const [removeUserTokensAdrresses,setRemoveUserTokensAdrresses] = useState([])
+  const alert = useAlert()
   
   useEffect( async() => {
     if (trackedAssets) {
@@ -58,6 +60,9 @@ const PortfolioUserTokensList = ({signer,walletAddress,cont, setShouldFetchUpdat
     if (txInfo.status=1) {
       resetRemoveTokenList()
       getTrackedTokens(selectedNFTToken)
+      alert.info('Traked tokens updated')
+    } else {
+      alert.error('Cancelled or failed')
     }
     setShouldFetchUpdatedSVG(true)
   }

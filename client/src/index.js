@@ -3,11 +3,29 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { transitions, positions, Provider as AlertProvider } from 'react-alert'
+
+const options = {
+  // you can also just use 'bottom center'
+  position: positions.BOTTOM_CENTER,
+  timeout: 5000,
+  offset: '30px',
+  transition: transitions.SCALE
+}
+
+const error = "notifyBackground notifyError"
+const  success = "notifyBackground notifySuccess"
+
+const AlertTemplate = ({ style, options, message, close }) => (
+  <div style={style} class={options.type === 'info' && success || error}>
+    {message}
+  </div>
+)
 
 ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
+   <AlertProvider template={AlertTemplate} {...options}>
+   <App />
+ </AlertProvider>,
   document.getElementById('root')
 );
 

@@ -1,12 +1,13 @@
 import {useEffect,useState} from 'react'
 import {IoIosAddCircle,IoIosRemoveCircle} from 'react-icons/io'
-
+import { useAlert } from 'react-alert'
 import "./portfolioSetup.css"
 import { ethers } from "ethers";
 
 const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont, setShouldFetchUpdatedSVG,selectedNFTToken,getTrackedTokens,trackedTokens}) => {
   const [tokens,setTokens] = useState([{}])
   const [userTokens,setUserTokens] = useState([])
+  const alert = useAlert()
 
   useEffect(async()=>{
     if (tokenList) {
@@ -66,6 +67,9 @@ const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont, setShouldFetch
     if (txInfo.status=1) {
       getTrackedTokens(selectedNFTToken)
       resetAddTokenList()
+      alert.info('Traked tokens updated')
+    } else {
+      alert.else('Cancelled or failed')
     }
     setShouldFetchUpdatedSVG(true)
   }
@@ -154,7 +158,7 @@ const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont, setShouldFetch
             </>
           ))}
         </div>
-        <button style={{marginTop:"30px"}} onClick={updateTokens} >Update</button>
+        <button style={{marginTop:"30px"}} onClick={updateTokens} >Add Tokens</button>
         </>: <></>}
     </div>
   )

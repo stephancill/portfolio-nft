@@ -1,8 +1,10 @@
 import PercentageSold from "./PercentageSold"
 import "./mintSection.css"
 import { ethers } from "ethers";
+import { useAlert } from 'react-alert'
 
 const MintSection = ({amountMinted,cont,address,signer,refreshUserNFTs}) => {
+  const alert = useAlert()
   const mintNFT = async ()=> {
     const deployment = cont.contracts.PortfolioNFT
     const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, signer)
@@ -13,6 +15,9 @@ const MintSection = ({amountMinted,cont,address,signer,refreshUserNFTs}) => {
     console.log("Minted", {tokenId})
     if (txInfo.status=1) {
       refreshUserNFTs()
+      alert.info("Token "+tokenId+" minted")
+    } else {
+      alert.error('Cancelled or failed')
     }
   }
   

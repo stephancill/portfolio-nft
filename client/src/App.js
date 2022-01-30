@@ -10,6 +10,7 @@ import PortfolioSetup from './components/PortfolioSetup';
 import { ethers } from 'ethers';
 import WalletInfo from './components/WalletInfo';
 import {  CSSTransition  } from 'react-transition-group'
+import { useAlert } from 'react-alert'
 
 function App() {
 const [walletConnected,setWalletConnected] = useState(false)
@@ -21,6 +22,7 @@ const [signer,setSigner] = useState()
 const contracts  =  require('./contracts.json')
 const [tokenList,setTokenList] = useState()
 const [refreshUserNFT,setRefreshUserNFT] = useState(false)
+const alert = useAlert()
 
 
 const networks = {

@@ -11,3 +11,17 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
+.notifyBackground {
+  border-radius: 5px;
+  display: flex;
+  padding: 10px;
+  color: white;
+}
+.notifyError {
+  background: linear-gradient(90deg, #982234 0%, #b84c4c 100%);
+}
+
+.notifySuccess {
+  background: linear-gradient(90deg, #6c579a 0%, #ab78c5 100%);
+}
