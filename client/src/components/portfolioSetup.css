@@ -19,7 +19,7 @@
   border: solid 1px black;
   border-radius: 5px;
   padding-top: 10px;
-  padding-bottom: 10px;
+  padding-bottom: 5px;
   background: #1f1f1f;
   overflow-y: auto;
   max-height: 400px;
