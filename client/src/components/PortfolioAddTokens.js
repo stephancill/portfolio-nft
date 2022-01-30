@@ -40,8 +40,7 @@ const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont, setShouldFetch
       setTokens(showTokens)
     } else {
       setTokens([])
-    }
-    
+    }  
   }
 
   const addUserToken = (a) => {
