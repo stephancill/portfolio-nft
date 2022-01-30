@@ -3,7 +3,7 @@
   height: 330px;
   width: 330px;
   border: #fff 1px solid;
-  margin-bottom: 0px;
+  margin-right: 10px;
 }
 .NFTBtn:hover {
   border: #c06286 1px solid;
@@ -19,10 +19,12 @@
   border: solid 1px black;
   border-radius: 5px;
   padding-top: 10px;
-  padding-bottom: 10px;
+  padding-bottom: 5px;
+  padding-left: 9px;
   background: #1f1f1f;
-  overflow-y: auto;
+  overflow-x: auto;
   max-height: 400px;
+  display: flex;
 }
 .addTokenBtn {
   height: 40px;

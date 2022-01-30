@@ -16,15 +16,16 @@ const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont, setShouldFetch
   useEffect(async()=>{
     if (tokenList) {
       searchToken("")
-      console.log(tokenList)
     }
   },[])
 
   const searchToken = (value) => {
+    setTokens([])
     const tokenLength = tokenList.tokens.length
     const valueLenth = value.length
     let showTokens = [{}]
     let a = 0
+    let foundNone = true
     for (let i = 0;i < tokenLength; i++){
       let onUserList = false
       for (let k=0;k<trackedTokens.length;k++) {
@@ -35,11 +36,15 @@ const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont, setShouldFetch
       if (!onUserList) {
         if (tokenList.tokens[i].symbol.substring(0,valueLenth).toUpperCase() === value.toUpperCase()) {
           showTokens[a] = {symbol:tokenList.tokens[i].symbol.toUpperCase(),logo:tokenList.tokens[i].logoURI,address:tokenList.tokens[i].address} 
-          a=a+1
+          a=a+1 
         }
       }
     }
-    setTokens(showTokens)
+    if (showTokens[0].symbol) {
+      setTokens(showTokens)
+    } else {
+      setTokens([])
+    }  
   }
 
   const addUserToken = (a) => {
@@ -164,7 +169,7 @@ const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont, setShouldFetch
     <div>
       <input placeholder="Search a name, address or symbol" onChange={e => searchToken(e.target.value)}></input>
         <div className="b2" style={{marginTop:"-10px"}}>
-        {(tokens.length > 10 ? [] : tokens).map((token, i) => ( <>
+        {(tokens.length > 10  ? [] : tokens).map((token, i) => ( <>
             <div className="row" key={i} id={i}
             onMouseEnter={() => showItem(i)}
             onMouseLeave={() => hideItem(i)} >

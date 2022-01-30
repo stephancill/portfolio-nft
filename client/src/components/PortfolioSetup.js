@@ -108,9 +108,6 @@ const PortfolioSetup = ({cont,walletAddress,signer,tokenList,refreshUserNFT,rese
             <button className="NFTBtn" id={"nft"+i} onClick={()=>{getTrackedTokens(tokenID[i])}}>
               <img src={NFT.svg} style={{width:"328px"}}></img>
             </button>
-            {(userNFTs.length!=i+1) && 
-              <div  style={{height:"10px",width:"100%"}}></div>
-            }
           </div>
           ))}
         </div>
