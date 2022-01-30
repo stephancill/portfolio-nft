@@ -9,7 +9,7 @@ import { ethers } from "ethers";
 const listTokensOfOwner = require("./erc-721")
 const baseToken  =  require('./../contracts.json')
 
-const PortfolioSetup = ({cont,walletAddress,signer,tokenList}) => {
+const PortfolioSetup = ({cont,walletAddress,signer,tokenList,refreshUserNFT,resetRefreshUserNFT}) => {
   const [addingToken,setAddingToken] = useState(false)
   const [userNFTs,setUserNFTs] = useState([{}])
   const [trackedTokens,setTrackedTokens] = useState([{}])
@@ -24,17 +24,19 @@ const PortfolioSetup = ({cont,walletAddress,signer,tokenList}) => {
   // remove token from list
   // get the balance of the tokens
 
-  useEffect( async() => {
+
+  useEffect(async() => {
     if (walletAddress)
       getUsersNFTTokens()
-  }, [tokenList])
-
-  useEffect(() => {
+    if (refreshUserNFT) {
+      resetRefreshUserNFT()
+    }
+    console.log("test")
     if (shouldFetchUpdatedSVG) {
       setShouldFetchUpdatedSVG(false)
       getUsersNFTTokens()
     }
-  }, [shouldFetchUpdatedSVG])
+  }, [shouldFetchUpdatedSVG,tokenList,refreshUserNFT])
 
   const back = () => {
     setAddingToken(!addingToken)

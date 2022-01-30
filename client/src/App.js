@@ -20,8 +20,7 @@ const [loaded,setLoaded] = useState(false)
 const [signer,setSigner] = useState()
 const contracts  =  require('./contracts.json')
 const [tokenList,setTokenList] = useState()
-
-const trackedAssets = [{symbol: "ETH", balance: 10.20},{symbol: "USDC", balance: 1000.20}]
+const [refreshUserNFT,setRefreshUserNFT] = useState(false)
 
 
 const networks = {
@@ -151,6 +150,13 @@ const changeNetwork = async (networkName ) => {
   getNetwork()
 };
 
+const refreshUserNFTs= () => {
+  setRefreshUserNFT(true)
+}
+const resetRefreshUserNFT = () => {
+  setRefreshUserNFT(false)
+}
+
 
 const walletInfo = <WalletInfo updateNetwork={updateNetwork}  walletAdd={walletAddress} wrongNetwork={wrongNetwork} network={network}/>
 
@@ -171,8 +177,8 @@ const walletInfo = <WalletInfo updateNetwork={updateNetwork}  walletAdd={walletA
                 {walletInfo}
                 </>:<>
                 {walletInfo}
-                <MintSection amountMinted={742} cont={contracts} address={walletAddress} signer={signer}/> 
-                <PortfolioSetup cont={contracts} walletAddress={walletAddress} signer={signer} tokenList={tokenList}/>
+                <MintSection amountMinted={742} cont={contracts} address={walletAddress} signer={signer} refreshUserNFTs={refreshUserNFTs}/> 
+                <PortfolioSetup cont={contracts} walletAddress={walletAddress} signer={signer} tokenList={tokenList} refreshUserNFT={refreshUserNFT} resetRefreshUserNFT={resetRefreshUserNFT}/>
               </>}
             </> : <>
             <ConnectWalletInfo amountMinted={742}/> 
