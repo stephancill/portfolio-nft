@@ -123,6 +123,8 @@ const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont, setShouldFetch
   }
 
   const updateTokens = async () => {
+
+    //TODO : disable btn untill price paths have been selected
     const deployment = cont.contracts.PortfolioNFT
     const portfolioNFT = new ethers.Contract(deployment.address, deployment.abi, signer)
     let tokenAddresss = userTokens.map(token => token.address)
@@ -231,7 +233,7 @@ const PortfolioAddTokens = ({tokenList,signer,walletAddress,cont, setShouldFetch
             </>
           ))}
         </div>
-        <button style={{marginTop:"30px"}} onClick={updateTokens} >Add Tokens</button>
+        <button style={{marginTop:"30px"}} onClick={updateTokens}>Add Tokens</button>
         </>: <></>}
     </div>
   )

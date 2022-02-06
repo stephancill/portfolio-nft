@@ -10,7 +10,7 @@
     sq1.y = sq1.x
     sq1.width = width1
     sq1.height = width1
-    sq1.col1 = getRndColor()+"0.5)"
+    sq1.col1 = getRndColor()+"0.2)"
     sq1.col2 = getRndColor()+"0.2)"
     const deg = getRndInteger(0,4) 
     sq1.rotate = "rotate("+(90*deg).toString()+" 150 150 )"
@@ -18,31 +18,36 @@
   }
 
   const sqr2 = () => {
-    const width1 = getRndInteger(80,250);
+    const width1 = getRndInteger(300,300);
     sq2.x = (300-width1)/2
     sq2.y = sq2.x
     sq2.width = width1
     sq2.height = width1
-    sq2.col1 = getRndColor()+"0.5)"
+    sq2.col1 = getRndColor()+"0.2)"
     sq2.col2 = getRndColor()+"0.2)"
-    sq2.rotate = getRndRotate()
+    const deg = getRndInteger(0,4) 
+    sq2.rotate = "rotate("+(90*deg).toString()+" 150 150 )"
     return sq2
   }
 
   const cir1 = () => {
-    const radius = getRndInteger(150,150)
+    const radius = getRndInteger(100,300)
     ci1.radius = radius 
-    ci1.col1 = getRndColor()+"0.5)"
-    ci1.col2 = getRndColor()+"0.2)"
+    ci1.x = getRndInteger(0,300)
+    ci1.y = getRndInteger(0,300)
+    ci1.col1 = getRndColor()+"0.2)"
+    ci1.col2 = getRndColor()+"0.1)"
     ci1.rotate = getRndRotate()
     return ci1
   }
 
   const cir2 = () => {
-    const radius = getRndInteger(50,150)
+    const radius = getRndInteger(100,300)
     ci2.radius = radius 
-    ci2.col1 = getRndColor()+"0.5)"
-    ci2.col2 = getRndColor()+"0.2)"
+    ci2.x = getRndInteger(0,300)
+    ci2.y = getRndInteger(0,300)
+    ci2.col1 = getRndColor()+"0.2)"
+    ci2.col2 = getRndColor()+"0.1)"
     ci2.rotate = getRndRotate()
     return ci2
   }

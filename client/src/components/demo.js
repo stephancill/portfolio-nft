@@ -27,10 +27,10 @@ const Demo = () => {
     var b = generate.getRndInteger(0,1)
     if (a===0 && b===0) {
       setObj1(topSqr)
-      setObj2(botSqr)
+      setObj2(topCir)
     } else if (a===1 && b===0){
       setObj1(topSqr)
-      setObj2(botSqr)
+      setObj2(topCir)
     } else if (a===0 && b===1){
       setObj1(topSqr)
       setObj2(botCir)
@@ -64,8 +64,7 @@ const Demo = () => {
           .blur {blur}
         </style>
         
-        <rect width="300" height="300" fill="#272727"/>
-        
+        <rect width="300" height="300" fill="#272727" class="blur"/>
         {obj1}
         {obj2}
         <filter id="blurFilter">
