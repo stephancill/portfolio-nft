@@ -20,12 +20,14 @@ const PortfolioSetup = ({cont,walletAddress,signer,tokenList,refreshUserNFT,rese
   const [selectedNFTToken, setSelectedNFTToken] = useState(null)
 
   useEffect(async() => {
+    
     if (walletAddress)
       getUsersNFTTokens()
     if (refreshUserNFT) {
       resetRefreshUserNFT()
     }
     console.log("test")
+    getUsersNFTTokens()
     if (shouldFetchUpdatedSVG) {
       setShouldFetchUpdatedSVG(false)
       getUsersNFTTokens()
@@ -54,7 +56,13 @@ const PortfolioSetup = ({cont,walletAddress,signer,tokenList,refreshUserNFT,rese
     for (let i=0;i<tokens.size;i++) { 
       tempNFTsvgs[i] = await getNFT(tokenIDs[i])
     }
-    setUserNFTs(tempNFTsvgs)
+    console.log(tempNFTsvgs)
+    if (tempNFTsvgs.length > 0 ) {
+      setUserNFTs(tempNFTsvgs)
+    } else {
+      setUserNFTs(null)
+    }
+    
   }
   
   const getTrackedTokens = async (clickedToken) => {
@@ -66,7 +74,6 @@ const PortfolioSetup = ({cont,walletAddress,signer,tokenList,refreshUserNFT,rese
     for (let i=0; i<trackedTokens.length; i++) {
       tempTrackedTokens[i] = await searchToken(trackedTokens[i])
     }
-    console.log(tempTrackedTokens)
     setTrackedTokens(tempTrackedTokens)
   }
 
